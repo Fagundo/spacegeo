@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: uv sync --all-groups
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Lint
+        run: uv run ruff check .
+      - name: Types
+        run: uv run pyright
+      - name: Layer contracts
+        run: uv run lint-imports
+      - name: Duplicate code
+        run: uv run pylint --disable=all --enable=duplicate-code src
+      - name: Tests (incl. architecture and contracts)
+        run: uv run pytest
