@@ -1,56 +1,65 @@
 ---
 name: add-data-source
-description: Use when bringing a new external dataset into spacegeo (earthquake catalog, OMNI solar wind, Kp/Dst indices, LASCO/CDAW CME catalog, etc.) so it arrives with provenance, a schema and tests.
+description: Use when bringing a new external dataset into spacegeo (earthquake catalog, OMNI solar wind, Kp/Dst indices, LASCO/CDAW CME catalog, etc.). Produces a Scraper, a DatasetReader with a schema, and tests.
 ---
 
 # Add a data source
 
-Goal: a new dataset can be downloaded reproducibly, loaded into a clean,
-UTC-indexed pandas DataFrame with unit-labelled columns, and trusted.
+A source is two classes in two independent packages, plus documentation.
+Follow `add-component` for the general rules.
 
-## Steps
+## 1. Document it
 
-1. **Document the source first.** Add a section to `docs/data-sources.md`:
-   name, publisher, URL, license or terms, temporal coverage, cadence,
-   known gaps, fill values, and any versioning (catalogs get revised).
+Add a section to `docs/data-sources.md`: publisher, URL, license/terms,
+coverage, cadence, file format, fill values, known gaps and revisions
+(catalogs get updated), and the Mc or quality caveats.
 
-2. **Download module** at `src/spacegeo/io/<source>.py`:
-   - `download(dest: Path, start: date, end: date) -> Path` writes only into
-     `data/raw/<source>/`.
-   - Records URL(s), UTC retrieval time, and SHA-256 of each file in
-     `data/raw/<source>/PROVENANCE.json`.
-   - Idempotent: skips files whose checksum already matches.
-   - If the network blocks the source, say so and ask the user to provide
-     the file; do not route around the block.
+## 2. Scraper — `src/spacegeo/data/scraping/<source>.py`
 
-3. **Loader** in the same module:
-   - `load(path: Path) -> pd.DataFrame`, pure: reads raw, returns clean.
-   - Index is a tz-aware UTC `DatetimeIndex`, sorted, duplicates resolved
-     explicitly (document the rule).
-   - Fill values → `NaN` here, and only here.
-   - Column names carry units (`bz_nT`, `speed_km_s`, `mag`, `depth_km`).
-   - Longitudes normalized to [-180, 180).
+```python
+@SCRAPERS.register("<source>")
+class <Source>Scraper(Scraper):
+    source_name = "<source>"
 
-4. **Schema** with pandera or an explicit `validate(df)` function: dtypes,
-   ranges (e.g. `0 <= depth_km <= 800`, `-90 <= lat_deg <= 90`), monotonic
-   index, required columns. Call it at the end of `load`.
+    def plan(self, window: TimeWindow) -> Sequence[DownloadRequest]:
+        ...  # one DownloadRequest per file needed to cover the window
+```
 
-5. **Tests** in `tests/io/test_<source>.py`, using a tiny fixture file
-   committed under `tests/fixtures/<source>/` (a few real-format rows, never
-   the full dataset):
-   - parses the fixture into the expected columns and dtypes;
-   - fill values become NaN;
-   - timestamps are UTC and sorted;
-   - schema rejects an obviously bad row.
+- Only implement `plan`. The base class skips current files, downloads via
+  the injected `HttpClient`, and writes `PROVENANCE.json`.
+- Choose file granularity (per year, per query chunk) so reruns re-fetch as
+  little as possible.
+- If the network blocks the source, say so and ask the user for the files;
+  don't route around the block.
 
-6. **Quick sanity report** (not committed as code; paste into the PR): row
-   count, time span, fraction missing per column, and a plot of coverage
-   over time. Flag gaps or regime changes (e.g. catalog completeness jumps).
+## 3. Reader — `src/spacegeo/data/io/<source>.py`
 
-7. Run `uv run ruff format && uv run ruff check && uv run pyright && uv run pytest`.
+```python
+@READERS.register("<source>")
+class <Source>Reader(DatasetReader):
+    schema = TableSchema(columns=(ColumnSpec("bz_nT", min_value=-500, max_value=500), ...))
+    fill_values = {"bz_nT": (999.9,), ...}
 
-## Done when
+    def _parse(self, path: Path) -> pd.DataFrame:
+        ...  # parse one file; UTC index via common.time.assume_utc
+```
 
-- `docs/data-sources.md` updated.
-- Download + loader + schema + tests merged, all checks green.
-- No data files committed.
+- Only implement `_parse` (and declare `schema` / `fill_values`). The base
+  class concatenates, replaces fill values, sorts and validates.
+- Column names carry units. Longitudes via `common.geo.normalize_longitude`.
+- The reader must not import the scraper (import-linter will fail); it
+  receives paths.
+
+## 4. Tests
+
+- `tests/data/scraping/test_<source>.py`: `plan` output for a known window,
+  using a fake `HttpClient`. No network.
+- `tests/data/io/test_<source>.py`: a tiny real-format fixture under
+  `tests/fixtures/<source>/` (a few rows, never the dataset) parses to the
+  expected columns, fill values become NaN, index is UTC and sorted, and a
+  bad row is rejected by the schema.
+
+## 5. Sanity report (in the PR, not code)
+
+Row count, time span, missing fraction per column, coverage over time.
+Flag gaps and regime changes (e.g. catalog completeness jumps).
