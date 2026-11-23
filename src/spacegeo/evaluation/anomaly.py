@@ -1,25 +1,26 @@
 """Regional seismicity anomaly scan: is a recent window unusually busy or quiet?
 
-Each region's count in the observation window is compared with a count
+Each region's count in an observation window is compared with a count
 distribution fitted to that region's own history (a CSEP-style N-test per
-region). P-values across all regions and both tails are corrected together
-with Benjamini-Hochberg, so a "flagged" region survives the look-elsewhere
-effect of scanning many places at once.
+region). Within each window, p-values across all regions and both tails are
+corrected together with Benjamini-Hochberg, so a flagged region survives the
+look-elsewhere effect of scanning many places at once.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from typing import Self
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
-from pydantic import AwareDatetime, Field
 
 from spacegeo.common.config import BaseConfig
+from spacegeo.common.fitting import FittableMixin
 from spacegeo.common.geo import GeoBox
 from spacegeo.common.stats import benjamini_hochberg
-from spacegeo.common.time import TimeWindow, duration, to_utc
+from spacegeo.common.time import TimeWindow, require_utc_index
 from spacegeo.models.base import CountModel, ModelData
 
 RESULT_COLUMNS = (
@@ -50,43 +51,27 @@ class RegionConfig(BaseConfig):
         return GeoBox(self.lat_min_deg, self.lat_max_deg, self.lon_min_deg, self.lon_max_deg)
 
 
-class AnomalyScanConfig(BaseConfig):
-    """Settings for a regional anomaly scan.
+class _RegionEvents:
+    """One region's event times (int64 ns, sorted) and magnitudes."""
 
-    Attributes:
-        regions: Regions to test (may overlap; each is tested on its own).
-        mc: Magnitude of completeness applied to the catalog.
-        baseline_start: Start of the history used to fit each region's rate.
-        baseline_end: End of that history; must not overlap the observation.
-        horizon_days: Observation window length, days.
-        fdr: False-discovery rate for flagging, across all tests.
-    """
+    def __init__(self, region: RegionConfig, events: pd.DataFrame) -> None:
+        local = events.loc[region.box.contains(events["lat_deg"], events["lon_deg"])].sort_index()
+        self.frame = local
+        self.times_ns = require_utc_index(local.index).as_unit("ns").asi8
+        self.mags = local["mag"].to_numpy(dtype=np.float64)
 
-    regions: tuple[RegionConfig, ...] = Field(min_length=1)
-    mc: float = 4.5
-    baseline_start: AwareDatetime
-    baseline_end: AwareDatetime
-    horizon_days: float = Field(default=7.0, gt=0)
-    fdr: float = Field(default=0.05, gt=0, lt=1)
-
-    @property
-    def baseline(self) -> TimeWindow:
-        """The baseline as a UTC window."""
-        return TimeWindow(to_utc(self.baseline_start), to_utc(self.baseline_end))
-
-    def observation(self, end: datetime | pd.Timestamp) -> TimeWindow:
-        """The ``horizon_days`` window ending at ``end`` (exclusive)."""
-        stop = to_utc(end)
-        return TimeWindow(stop - duration(days=self.horizon_days), stop)
+    def slice(self, window: TimeWindow) -> npt.NDArray[np.float64]:
+        lo, hi = np.searchsorted(self.times_ns, [window.start.value, window.end.value])
+        return self.mags[lo:hi]
 
 
-class RegionalAnomalyScanner:
-    """Tests each region's recent count against its own history.
+class RegionalAnomalyScanner(FittableMixin):
+    """Fits a count model per region once, then scores any later windows.
 
     Args:
         regions: Regions to scan.
-        model_factory: Builds a fresh, unfitted :class:`CountModel` whose
-            horizon equals the observation window length.
+        model_factory: Builds a fresh, unfitted :class:`CountModel`; its
+            horizon is the length of every scored window.
         fdr: False-discovery rate used for the ``flag`` column.
     """
 
@@ -101,47 +86,76 @@ class RegionalAnomalyScanner:
         self._regions = tuple(regions)
         self._model_factory = model_factory
         self._fdr = fdr
+        self._models: dict[str, CountModel] = {}
+        self._fit_end: pd.Timestamp | None = None
+
+    def fit(self, events: pd.DataFrame, baseline: TimeWindow) -> Self:
+        """Fit each region's count model on events inside ``baseline``.
+
+        Args:
+            events: Catalog with ``lat_deg``, ``lon_deg``, ``mag``; UTC index;
+                already cut at Mc (and declustered if the model assumes
+                independent events).
+            baseline: History to learn from.
+        """
+        self._models = {
+            r.name: self._model_factory().fit(
+                ModelData(events=_RegionEvents(r, events).frame, window=baseline)
+            )
+            for r in self._regions
+        }
+        self._fit_end = baseline.end
+        self._mark_fitted()
+        return self
+
+    def score(self, events: pd.DataFrame, windows: Sequence[TimeWindow]) -> pd.DataFrame:
+        """Score every region in every window.
+
+        Returns:
+            Long frame with ``window_start``, ``region`` and
+            :data:`RESULT_COLUMNS`; FDR is applied within each window.
+        """
+        self._require_fitted()
+        self._check_windows(windows)
+        per_region = [_RegionEvents(r, events) for r in self._regions]
+        tables = [self._score_window(per_region, w) for w in windows]
+        return pd.concat(tables, ignore_index=True)
 
     def scan(
         self, events: pd.DataFrame, baseline: TimeWindow, observation: TimeWindow
     ) -> pd.DataFrame:
-        """Score every region.
-
-        Args:
-            events: Catalog with ``lat_deg``, ``lon_deg`` and ``mag`` columns,
-                UTC-indexed, already cut at Mc (and declustered if the model
-                assumes independence).
-            baseline: History used to fit each region's count model.
-            observation: Window being tested; its length must equal the
-                model horizon and it must start after the baseline ends.
+        """Fit on ``baseline`` and score one window.
 
         Returns:
-            One row per region (index ``region``) with columns
-            :data:`RESULT_COLUMNS`, sorted by ``p_high`` then ``p_low``.
+            One row per region (index ``region``), sorted by ``p_high`` then
+            ``p_low``.
         """
-        self._check_windows(baseline, observation)
-        rows = [self._score(region, events, baseline, observation) for region in self._regions]
-        table = pd.DataFrame(rows).set_index("region")
-        return self._add_fdr(table).sort_values(["p_high", "p_low"]).loc[:, list(RESULT_COLUMNS)]
+        table = self.fit(events, baseline).score(events, [observation])
+        table = table.set_index("region").sort_values(["p_high", "p_low"])
+        return table.loc[:, list(RESULT_COLUMNS)]
 
-    def _check_windows(self, baseline: TimeWindow, observation: TimeWindow) -> None:
-        horizon = self._model_factory().horizon
-        if observation.duration != horizon:
-            raise ValueError(f"Observation is {observation.duration}, model horizon is {horizon}.")
-        if baseline.end > observation.start:
-            raise ValueError("Baseline must end before the observation window starts.")
+    def _check_windows(self, windows: Sequence[TimeWindow]) -> None:
+        horizon = next(iter(self._models.values())).horizon
+        for window in windows:
+            if window.duration != horizon:
+                raise ValueError(f"Window is {window.duration}, model horizon is {horizon}.")
+            if self._fit_end is not None and window.start < self._fit_end:
+                raise ValueError("Scored windows must start after the fit window ends.")
 
-    def _score(
-        self,
-        region: RegionConfig,
-        events: pd.DataFrame,
-        baseline: TimeWindow,
-        observation: TimeWindow,
+    def _score_window(self, per_region: list[_RegionEvents], window: TimeWindow) -> pd.DataFrame:
+        rows = [
+            self._score_region(r, e, window) for r, e in zip(self._regions, per_region, strict=True)
+        ]
+        table = pd.DataFrame(rows)
+        table.insert(0, "window_start", window.start)
+        return self._add_fdr(table)
+
+    def _score_region(
+        self, region: RegionConfig, events: _RegionEvents, window: TimeWindow
     ) -> dict[str, object]:
-        local = events.loc[region.box.contains(events["lat_deg"], events["lon_deg"])]
-        model = self._model_factory().fit(ModelData(events=local, window=baseline))
-        recent = local.loc[observation.mask(local.index)]
-        observed = len(recent)
+        model = self._models[region.name]
+        mags = events.slice(window)
+        observed = int(mags.size)
         expected = model.expected_count()
         return {
             "region": region.name,
@@ -150,7 +164,7 @@ class RegionalAnomalyScanner:
             "ratio": observed / expected if expected > 0 else np.inf,
             "p_high": model.survival(observed),
             "p_low": model.cdf(observed),
-            "max_mag": float(recent["mag"].max()) if observed else np.nan,
+            "max_mag": float(mags.max()) if observed else np.nan,
         }
 
     def _add_fdr(self, table: pd.DataFrame) -> pd.DataFrame:

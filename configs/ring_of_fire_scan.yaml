@@ -4,14 +4,19 @@
 # segment. They may overlap; each is tested on its own and all p-values are
 # FDR-corrected together. A box with lon_min > lon_max crosses 180 degrees.
 #
-# Baseline: 2000-2019. It stops before the project's locked test years, and
-# global ComCat is close to complete at M4.5 over this span (less so in remote
+# Split (see docs/experiments/anomaly-scan.md):
+#   train 2000-2019  -> fit each region's weekly count model
+#   val   2020-2025  -> check the p-values are calibrated (no fitting here)
+#   test  2026 on    -> live weekly predictions, models refit on 2000-2025
+# Global ComCat is close to complete at M4.5 over this span (less so in remote
 # oceanic segments, e.g. parts of Tonga-Kermadec and the Aleutians).
 mc: 4.5
-baseline_start: "2000-01-01T00:00:00Z"
-baseline_end: "2020-01-01T00:00:00Z"
+train_start: "2000-01-01T00:00:00Z"
+val_start: "2020-01-01T00:00:00Z"
+test_start: "2026-01-01T00:00:00Z"
 horizon_days: 7
 fdr: 0.05
+week_anchor: W-MON  # weeks run Monday 00:00 UTC to Monday 00:00 UTC
 regions:
   - {name: alaska_aleutians,    lat_min_deg: 50,  lat_max_deg: 65,  lon_min_deg: 165,  lon_max_deg: -135}
   - {name: cascadia,            lat_min_deg: 39,  lat_max_deg: 52,  lon_min_deg: -132, lon_max_deg: -119}

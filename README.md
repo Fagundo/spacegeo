@@ -15,21 +15,27 @@ uv run pytest
 
 ## Weekly Ring of Fire anomaly scan
 
+Latest results: [`results/anomaly/test/latest.md`](results/anomaly/test/latest.md)
+(updated every Monday by the `Weekly anomaly scan` workflow).
+
+For each region in `configs/ring_of_fire_scan.yaml`, each week's M>=4.5 count
+is compared with that region's own history, two ways:
+
+- `activity`: raw catalog vs. the distribution of that region's past weekly
+  counts (aftershock bursts included as they actually occurred).
+- `mainshocks`: causal Gardner-Knopoff declustered catalog vs. a Poisson rate.
+
+Split: train 2000-2019, validation 2020-2025 (calibration check), test 2026
+onward (models refit on 2000-2025). Pre-registration:
+[`docs/experiments/anomaly-scan.md`](docs/experiments/anomaly-scan.md).
+
+Run locally:
+
 ```bash
-uv run python scripts/scan_anomalies.py                     # week ending today 00:00 UTC
-uv run python scripts/scan_anomalies.py --end 2026-11-23T00:00Z
+uv run python scripts/update_catalog.py          # refresh data/catalog/
+uv run python scripts/scan_anomalies.py validate # once
+uv run python scripts/scan_anomalies.py predict
 ```
-
-For each region in `configs/ring_of_fire_scan.yaml`, compares the last week's
-M>=4.5 count with that region's 2000-2019 history, two ways:
-
-- `activity`: raw catalog vs. a negative binomial fitted to weekly counts
-  (allows for typical aftershock clustering).
-- `mainshocks`: Gardner-Knopoff declustered catalog vs. a Poisson rate.
-
-P-values (excess and deficit) are Benjamini-Hochberg corrected across all
-regions; `flag` marks q <= 0.05. Output goes to `runs/<UTC>_anomaly-scan/`.
-This is monitoring, not a test of the space-weather hypothesis.
 
 ## Layout
 

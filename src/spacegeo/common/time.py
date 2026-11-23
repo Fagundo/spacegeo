@@ -115,6 +115,16 @@ class TimeWindow:
         if self.end <= self.start:
             raise ValueError(f"TimeWindow end {self.end} must be after start {self.start}.")
 
+    @classmethod
+    def calendar_year(cls, year: int) -> TimeWindow:
+        """The UTC calendar year ``[year-01-01, (year+1)-01-01)``."""
+        return cls(to_utc(f"{year:04d}-01-01T00:00Z"), to_utc(f"{year + 1:04d}-01-01T00:00Z"))
+
+    def clip_end(self, end: pd.Timestamp) -> TimeWindow | None:
+        """This window truncated to end no later than ``end`` (None if empty)."""
+        stop = min(self.end, to_utc(end))
+        return TimeWindow(self.start, stop) if stop > self.start else None
+
     @property
     def duration(self) -> pd.Timedelta:
         """Length of the window."""

@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from spacegeo.common.exceptions import NotFittedError
 from spacegeo.common.time import TimeWindow, duration, to_utc
-from spacegeo.evaluation.anomaly import AnomalyScanConfig, RegionalAnomalyScanner, RegionConfig
+from spacegeo.evaluation.anomaly import RegionalAnomalyScanner, RegionConfig
 from spacegeo.models.count import PoissonCountModel
 
 BASELINE = TimeWindow(to_utc("2000-01-01T00:00Z"), to_utc("2020-01-01T00:00Z"))
@@ -74,15 +75,29 @@ def test_window_checks() -> None:
     with pytest.raises(ValueError, match="horizon"):
         _scanner().scan(events, BASELINE, TimeWindow(OBS.start, OBS.end + duration(days=1)))
     overlapping = TimeWindow(BASELINE.start, OBS.start + duration(days=1))
-    with pytest.raises(ValueError, match="before"):
+    with pytest.raises(ValueError, match="after the fit window"):
         _scanner().scan(events, overlapping, OBS)
 
 
-def test_config_builds_windows() -> None:
-    cfg = AnomalyScanConfig(
-        regions=tuple(REGIONS),
-        baseline_start=BASELINE.start.to_pydatetime(),
-        baseline_end=BASELINE.end.to_pydatetime(),
-    )
-    assert cfg.baseline == BASELINE
-    assert cfg.observation(OBS.end) == OBS
+def test_score_many_windows_matches_single_scans() -> None:
+    events = _events(np.random.default_rng(4), burst_region=2, burst=12)
+    scanner = _scanner().fit(events, BASELINE)
+    earlier = TimeWindow(OBS.start - duration(days=7), OBS.start)
+    long = scanner.score(events, [earlier, OBS])
+    assert list(long["window_start"].unique()) == [earlier.start, OBS.start]
+    single = _scanner().scan(events, BASELINE, OBS)
+    latest = long.loc[long["window_start"] == OBS.start].set_index("region")
+    pd.testing.assert_series_equal(latest["p_high"].sort_index(), single["p_high"].sort_index())
+    assert (long.loc[long["window_start"] == earlier.start, "observed"] == 0).all()
+
+
+def test_non_nanosecond_index_is_handled() -> None:
+    events = _events(np.random.default_rng(5), burst_region=1, burst=9)
+    events.index = pd.DatetimeIndex(events.index).as_unit("us")
+    table = _scanner().scan(events, BASELINE, OBS)
+    assert table.loc["r1", "observed"] == 9
+
+
+def test_score_requires_fit() -> None:
+    with pytest.raises(NotFittedError):
+        _scanner().score(pd.DataFrame(), [OBS])

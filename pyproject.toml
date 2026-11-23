@@ -103,6 +103,7 @@ root_package = "spacegeo"
 name = "Layered architecture: each layer imports only the layers below it"
 type = "layers"
 layers = [
+    "spacegeo.monitoring",
     "spacegeo.training",
     "spacegeo.evaluation",
     "spacegeo.models",

@@ -6,7 +6,11 @@ import pytest
 
 from spacegeo.common.time import TimeWindow, duration, to_utc
 from spacegeo.models.base import ModelData
-from spacegeo.models.count import NegativeBinomialCountModel, PoissonCountModel
+from spacegeo.models.count import (
+    EmpiricalCountModel,
+    NegativeBinomialCountModel,
+    PoissonCountModel,
+)
 
 WINDOW = TimeWindow(to_utc("2000-01-01T00:00Z"), to_utc("2000-03-11T00:00Z"))  # 10 weeks
 
@@ -59,3 +63,12 @@ def test_window_counts_drop_partial_bin() -> None:
 def test_horizon_must_be_positive() -> None:
     with pytest.raises(ValueError, match="positive"):
         PoissonCountModel(duration(days=0))
+
+
+def test_empirical_uses_historical_fractions() -> None:
+    model = EmpiricalCountModel(duration(days=7)).fit(_weekly([0, 0, 0, 1, 0, 0, 15, 0, 1, 3]))
+    assert model.expected_count() == pytest.approx(2.0)
+    assert model.survival(1) == pytest.approx(0.4)
+    assert model.survival(4) == pytest.approx(0.1)
+    assert model.survival(16) == 0.0
+    assert model.cdf(0) == pytest.approx(0.6)

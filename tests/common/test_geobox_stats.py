@@ -3,6 +3,7 @@ import pytest
 
 from spacegeo.common.geo import GeoBox
 from spacegeo.common.stats import benjamini_hochberg
+from spacegeo.common.time import TimeWindow, to_utc
 
 
 def test_box_contains_half_open() -> None:
@@ -41,3 +42,13 @@ def test_bh_matches_hand_calculation() -> None:
 def test_bh_rejects_invalid() -> None:
     with pytest.raises(ValueError, match="NaN"):
         benjamini_hochberg([0.1, np.nan])
+
+
+def test_calendar_year_and_clip() -> None:
+    year = TimeWindow.calendar_year(2026)
+    assert year.start == to_utc("2026-01-01T00:00Z")
+    assert year.end == to_utc("2027-01-01T00:00Z")
+    clipped = year.clip_end(to_utc("2026-11-23T00:00Z"))
+    assert clipped is not None
+    assert clipped.end == to_utc("2026-11-23T00:00Z")
+    assert year.clip_end(to_utc("2026-01-01T00:00Z")) is None
