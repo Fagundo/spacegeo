@@ -1,0 +1,164 @@
+[
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2000-01-01T00%3A00%3A00&endtime=2000-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2000.csv.gz",
+    "sha256": "6f62f63d9e99fecec0260f5382661987fad65556ef5e02dfd400e4319065953c",
+    "retrieved_at": "2026-11-23T23:19:31.481466+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2001-01-01T00%3A00%3A00&endtime=2001-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2001.csv.gz",
+    "sha256": "e26205caa846f85d6004fd8406ed3cfdd7d4087d4e5b2d559675d1ff5968f27d",
+    "retrieved_at": "2026-11-23T23:19:32.532790+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2002-01-01T00%3A00%3A00&endtime=2002-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2002.csv.gz",
+    "sha256": "c9d6e90f24d7f11a3898a45b7279f944454ed177c6f62ccce4ef7bd26f67a16b",
+    "retrieved_at": "2026-11-23T23:19:34.400819+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2003-01-01T00%3A00%3A00&endtime=2003-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2003.csv.gz",
+    "sha256": "1eb8658dcced8cea4d08ebc0ad760fb4d3e8e8817321934373bc6152fa5696cf",
+    "retrieved_at": "2026-11-23T23:19:36.211435+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2004-01-01T00%3A00%3A00&endtime=2004-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2004.csv.gz",
+    "sha256": "1749609ab634c14da6e093931a1300f1bee413ba901de81e8ff3508c715d7892",
+    "retrieved_at": "2026-11-23T23:19:38.140301+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2005-01-01T00%3A00%3A00&endtime=2005-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2005.csv.gz",
+    "sha256": "8f6d33d641b7fda617769521fd9ee75a7ff2270c2fde19667a47b994a4f8f043",
+    "retrieved_at": "2026-11-23T23:19:39.608259+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2006-01-01T00%3A00%3A00&endtime=2006-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2006.csv.gz",
+    "sha256": "8c7a4fc7c3afd17854d0c2d14165d9c8334976208048ba96ffb0b8ed8762cc12",
+    "retrieved_at": "2026-11-23T23:19:40.641093+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2007-01-01T00%3A00%3A00&endtime=2007-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2007.csv.gz",
+    "sha256": "bb12e7c5f3c2a87090a2fed54b07ebd1c73f690f0b6c1f351872a2b2becfaf64",
+    "retrieved_at": "2026-11-23T23:19:42.453397+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2008-01-01T00%3A00%3A00&endtime=2008-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2008.csv.gz",
+    "sha256": "431324edeab4fc0a764d4955ce56fe371b74f4a3dd9362004691ae4453c35efd",
+    "retrieved_at": "2026-11-23T23:19:43.911687+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2009-01-01T00%3A00%3A00&endtime=2009-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2009.csv.gz",
+    "sha256": "66cd94e0f0d0fbaa0efe04007735b8e259cf7c04f3babdcc9c655a8501fc453e",
+    "retrieved_at": "2026-11-23T23:19:45.386830+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2010-01-01T00%3A00%3A00&endtime=2010-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2010.csv.gz",
+    "sha256": "942cadbc2046f576f1a37a488cd0bab01c276ed00daa5e0df5ea37777e9f69ac",
+    "retrieved_at": "2026-11-23T23:19:47.337681+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2011-01-01T00%3A00%3A00&endtime=2011-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2011.csv.gz",
+    "sha256": "b53e47b7023f47eade6970b09c33a1a499c48094e7061cb9e7c02f91b233cbe8",
+    "retrieved_at": "2026-11-23T23:19:48.552620+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2012-01-01T00%3A00%3A00&endtime=2012-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2012.csv.gz",
+    "sha256": "8826b0f40a681023c64c1a36aba6793a610b71fcf70a395451e2b3a0a2ee1016",
+    "retrieved_at": "2026-11-23T23:19:49.692151+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2013-01-01T00%3A00%3A00&endtime=2013-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2013.csv.gz",
+    "sha256": "95c0e4d9d943927681aad4905667c99bbfaa3dd32f81031d07541e56d0ce3b9c",
+    "retrieved_at": "2026-11-23T23:19:51.241703+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2014-01-01T00%3A00%3A00&endtime=2014-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2014.csv.gz",
+    "sha256": "43cd6b2c6c1981e493cf30650a75feb8e75a6f36559eb36fa98384b637b52f94",
+    "retrieved_at": "2026-11-23T23:19:52.780132+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2015-01-01T00%3A00%3A00&endtime=2015-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2015.csv.gz",
+    "sha256": "888fdda24ee7ae6944fb2cf006e5e8f8a245a26f8e4fd3f32a60e4df65118ad7",
+    "retrieved_at": "2026-11-23T23:19:54.153035+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2016-01-01T00%3A00%3A00&endtime=2016-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2016.csv.gz",
+    "sha256": "cd03455a3e04b8d3ed5c3690b94a722335df30ae55f2dbcdedde07fb744a2ce2",
+    "retrieved_at": "2026-11-23T23:19:55.631139+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2017-01-01T00%3A00%3A00&endtime=2017-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2017.csv.gz",
+    "sha256": "b59abcd2a92973421832c51aef24aa13dfac11ba9f392e28fe4573389cc9fea3",
+    "retrieved_at": "2026-11-23T23:19:57.439269+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2018-01-01T00%3A00%3A00&endtime=2018-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2018.csv.gz",
+    "sha256": "82ed863dbd53de53ce03b4d6b0ff5fc0b22304455bdd6c6bb1bdc75bb8838ca7",
+    "retrieved_at": "2026-11-23T23:19:58.816393+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2019-01-01T00%3A00%3A00&endtime=2019-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2019.csv.gz",
+    "sha256": "7d5ce5cd16765ff52170a7ebc44a92d139eb502263e5c6c5431cbf6ad6dfc894",
+    "retrieved_at": "2026-11-23T23:19:59.869732+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2020-01-01T00%3A00%3A00&endtime=2020-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2020.csv.gz",
+    "sha256": "cd2c6c983b9c5f8882d49acb6d17b22a961745c56985b185fd9e04e2e8e7bcfb",
+    "retrieved_at": "2026-11-23T23:20:04.006272+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2021-01-01T00%3A00%3A00&endtime=2021-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2021.csv.gz",
+    "sha256": "581a714efdb314129e46ed80b749a3ce97449f4df74691212a4739dfdbffba00",
+    "retrieved_at": "2026-11-23T23:20:05.781045+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2022-01-01T00%3A00%3A00&endtime=2022-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2022.csv.gz",
+    "sha256": "8ad57d80b48e6600828750a5e577b34ff9c5e6c760fd0698dc846cb8ffc4ab75",
+    "retrieved_at": "2026-11-23T23:20:07.514929+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2023-01-01T00%3A00%3A00&endtime=2023-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2023.csv.gz",
+    "sha256": "6eb19417f5d7f47d33b2bd9811e65e4c73064a281c7ad77cb07210ea1f5acc00",
+    "retrieved_at": "2026-11-23T23:20:08.575293+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2024-01-01T00%3A00%3A00&endtime=2024-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2024.csv.gz",
+    "sha256": "0f2794520146578477ff4aefbb0ada106c00440b5884eb9ce44145b574dec343",
+    "retrieved_at": "2026-11-23T23:20:09.707942+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2025-01-01T00%3A00%3A00&endtime=2025-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2025.csv.gz",
+    "sha256": "c8986cd107babfd2b3f3f97240b71210a7c4ade939337d3e5bb43b554fb4ce06",
+    "retrieved_at": "2026-11-23T23:20:11.070584+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2026-01-01T00%3A00%3A00&endtime=2026-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=30&maxlatitude=39&minlongitude=-126&maxlongitude=-114",
+    "filename": "2026.csv.gz",
+    "sha256": "f30b47c5809a1775a10c971a7daaf448a3a04b6cb0872726c698d524fde7308d",
+    "retrieved_at": "2026-11-23T23:20:12.387440+00:00"
+  }
+]

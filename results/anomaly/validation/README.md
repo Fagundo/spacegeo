@@ -6,8 +6,8 @@ Pre-registration: `docs/experiments/anomaly-scan.md`.
 
 | test | alpha | region_weeks | rate_p_high_le_alpha | rate_p_low_le_alpha | rate_flag_excess | rate_flag_deficit | observed | expected | observed_over_expected | mean_log_score | pit_max_bin_deviation | calibrated |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| activity | 0.05 | 5287 | 0.0454 | 0.00738 | 0.00265 | 0 | 34350 | 3.24e+04 | 1.06 | -2.39 | 0.0281 | True |
-| mainshocks | 0.05 | 5287 | 0.0426 | 0.00643 | 0.00322 | 0.000189 | 12903 | 1.19e+04 | 1.08 | -1.68 | 0.0282 | True |
+| activity | 0.05 | 5287 | 0.0446 | 0.00643 | 0.00265 | 0 | 31739 | 2.99e+04 | 1.06 | -2.34 | 0.027 | True |
+| mainshocks | 0.05 | 5287 | 0.0414 | 0.00511 | 0.00265 | 0.000189 | 11952 | 1.1e+04 | 1.08 | -1.64 | 0.0269 | True |
 
 ![PIT histogram](pit.png)
 
@@ -18,12 +18,12 @@ from a 13-week moving-block bootstrap.
 
 | catalog | model | mean_log_score | mean_log_score_lo | mean_log_score_hi | info_gain | info_gain_lo | info_gain_hi | rate_p_high_le_alpha | rate_p_low_le_alpha |
 |---|---|---|---|---|---|---|---|---|---|
-| activity | poisson | -4.38 | -6.24 | -3.13 | 0 | 0 | 0 | 0.0789 | 0.0762 |
-| activity | negative_binomial | -2.85 | -2.91 | -2.8 | 1.53 | 0.325 | 3.39 | 0.0223 | 0 |
-| activity | empirical | -2.39 | -2.49 | -2.3 | 1.99 | 0.815 | 3.81 | 0.0454 | 0.00738 |
-| mainshocks | poisson | -1.68 | -1.75 | -1.64 | 0 | 0 | 0 | 0.0426 | 0.00643 |
-| mainshocks | negative_binomial | -1.69 | -1.72 | -1.66 | -0.000748 | -0.0173 | 0.0257 | 0.0286 | 0.00132 |
-| mainshocks | empirical | -1.68 | -1.72 | -1.65 | 0.0019 | -0.0126 | 0.0259 | 0.0363 | 0.00246 |
+| activity | poisson | -4.4 | -6.4 | -3.11 | 0 | 0 | 0 | 0.0753 | 0.0741 |
+| activity | negative_binomial | -2.81 | -2.87 | -2.76 | 1.59 | 0.343 | 3.55 | 0.0212 | 0 |
+| activity | empirical | -2.34 | -2.43 | -2.25 | 2.07 | 0.842 | 4.01 | 0.0446 | 0.00643 |
+| mainshocks | poisson | -1.64 | -1.7 | -1.59 | 0 | 0 | 0 | 0.0414 | 0.00511 |
+| mainshocks | negative_binomial | -1.63 | -1.67 | -1.61 | 0.00153 | -0.016 | 0.032 | 0.0265 | 0.000757 |
+| mainshocks | empirical | -1.63 | -1.67 | -1.6 | 0.00602 | -0.00981 | 0.0332 | 0.0378 | 0.000757 |
 
 ## Detection power (injected extra events in one region-week)
 

@@ -1,3 +1,3 @@
 test,alpha,region_weeks,rate_p_high_le_alpha,rate_p_low_le_alpha,rate_flag_excess,rate_flag_deficit,observed,expected,observed_over_expected,mean_log_score,pit_max_bin_deviation,calibrated
-activity,0.05,5287,0.0453944,0.00737658,0.002648,0,34350,32389,1.06054,-2.38895,0.0281256,True
-mainshocks,0.05,5287,0.0425572,0.00643087,0.00321543,0.000189143,12903,11911.1,1.08328,-1.68483,0.0282391,True
+activity,0.05,5287,0.0446378,0.00643087,0.002648,0,31739,29945.5,1.05989,-2.33501,0.0269907,True
+mainshocks,0.05,5287,0.0414224,0.00510687,0.002648,0.000189143,11952,11041.2,1.08249,-1.63594,0.0269151,True

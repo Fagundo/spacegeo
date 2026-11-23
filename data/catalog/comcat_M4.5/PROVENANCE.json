@@ -160,5 +160,11 @@
     "filename": "2026.csv.gz",
     "sha256": "64503b5b8a640598994483f49465e20ab1d2179d069da0d082c8c7601bd1538b",
     "retrieved_at": "2026-11-23T20:54:16.002696+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2026-01-01T00%3A00%3A00&endtime=2026-11-23T23%3A18%3A04&minmagnitude=4.5&limit=20000",
+    "filename": "2026.csv.gz",
+    "sha256": "c9688021b2be9894fb4ea77f13ed4274dcd1de1272b194b2c538752371f4c875",
+    "retrieved_at": "2026-11-23T23:18:06.505087+00:00"
   }
 ]
