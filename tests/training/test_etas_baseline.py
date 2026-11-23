@@ -57,7 +57,7 @@ def test_experiment_scores_and_reports(catalog: pd.DataFrame, tmp_path: Path) ->
     assert (result.per_region["branching_ratio"] > 0).all()
     assert result.weekly["week"].min() >= _config().validation.start
     assert result.weekly["week"].max() < _config().validation.end
-    assert int(result.weekly["n"].sum()) == int(result.per_region["n_val"].sum())
+    assert result.weekly["n"].to_numpy().sum() == result.per_region["n_val"].to_numpy().sum()
 
     run = RunDirectory(tmp_path, "etas-test", GitState(commit="abc", dirty=False), seed=0)
     EtasBaselineReport().write(run, _config(), result)
