@@ -1,4 +1,9 @@
-# Experiment (pre-registered, not yet run): do anomaly flags precede large quakes?
+# Experiment (pre-registered): do anomaly flags precede large quakes?
+
+**Run 2026-11-23 on validation 2020-2025: null.** 0 of 14 flagged region-weeks
+were followed by an M>=7 mainshock (base rate 4.5%); only a relative risk above
+about 4 can be ruled out. See `docs/results/2026-11-23_anomaly-followup/`.
+The test-span confirmation (2026+) is still pending.
 
 Written 2026-11-23, before any real-data scan has been run.
 

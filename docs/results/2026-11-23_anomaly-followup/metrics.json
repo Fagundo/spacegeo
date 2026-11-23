@@ -1,0 +1,20 @@
+{
+  "criterion_met": false,
+  "primary": {
+    "brier_skill_vs_base_rate": 0.0001273879702037295,
+    "comparison": "mainshocks_excess_30d",
+    "flagged_weeks": 14,
+    "flagged_with_target": 0,
+    "p_holm_secondary": null,
+    "p_rr_le_1": 1.0,
+    "p_target_given_flag": 0.0,
+    "p_target_given_no_flag": 0.045341018251681076,
+    "primary": true,
+    "relative_risk": 0.0,
+    "resamples_without_flags": 0.0,
+    "rr_hi": 0.0,
+    "rr_lo": 0.0,
+    "unflagged_weeks": 5205,
+    "unflagged_with_target": 236
+  }
+}
