@@ -26,7 +26,10 @@ is compared with that region's own history, two ways:
 - `mainshocks`: causal Gardner-Knopoff declustered catalog vs. a Poisson rate.
 
 Split: train 2000-2019, validation 2020-2025 (calibration check), test 2026
-onward (models refit on 2000-2025). Pre-registration:
+onward (models refit on 2000-2025). Validation also reports log scores of
+candidate models with bootstrap intervals, a PIT calibration plot and an
+injection-based detection power curve:
+[`results/anomaly/validation/README.md`](results/anomaly/validation/README.md). Pre-registration:
 [`docs/experiments/anomaly-scan.md`](docs/experiments/anomaly-scan.md).
 
 Run locally:

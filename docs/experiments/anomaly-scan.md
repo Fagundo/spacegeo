@@ -31,6 +31,9 @@ not a test of the project's primary hypothesis.
 | Validation | 2020-01-01 to 2026-01-01 | Calibration check only; nothing is tuned |
 | Test | 2026-01-01 onward | Live weekly predictions; models refit on train + validation |
 
+Scored windows start at least `gap_days` (7, one horizon) after each split
+boundary, so short-range clustering cannot straddle it.
+
 ## Pre-registered success criterion (validation)
 
 A test is **calibrated** if, over all validation region-weeks, both
@@ -40,6 +43,39 @@ below 0.05.
 
 Also reported, not pass/fail: flag rates after FDR, and total observed /
 expected per test and region (drift or completeness changes since training).
+
+## Added 2026-11-23 (still before any real-data run)
+
+**Forecast accuracy (proper scoring).** Every region-week gets a log score
+(natural log of the forecast probability of the observed count) and a
+randomized PIT. Reported on validation:
+
+- PIT histogram per test (`pit.png`, `pit_histogram.csv`); flat = calibrated.
+- Mean log score of three candidate count models (Poisson, negative
+  binomial, empirical) on each catalog, and information gain vs. Poisson,
+  with 95% moving-block bootstrap intervals (13-week blocks over weekly
+  cross-region means).
+
+**Model selection rule.** The live model for each test is the candidate
+with the highest mean validation log score among those that pass the
+calibration criterion above. If its information-gain interval overlaps the
+current model's, keep the current one (empirical for `activity`, Poisson for
+`mainshocks`). Changing the live model is recorded here, dated.
+
+**Detection power (injection).** For each validation region-week, the
+observed count is raised by k in that region only (k = 2, 5, 10, 20, 40, 80,
+160), p-values are recomputed from the fitted model and Benjamini-Hochberg is
+re-run over the week. Power = share of region-weeks then flagged `excess`.
+Reported per test and region (`power.csv`, `power.png`) with the smallest
+k reaching 80% power (`min_detectable.csv`). This is descriptive; there is
+no pass/fail threshold.
+
+On the simulated clustered catalog used for development (not real data):
+both tests calibrated; empirical beat Poisson and negative binomial on the
+raw catalog by log score; Poisson was best on the declustered catalog;
+`mainshocks` reached 80% power at about +10 events, while `activity` rarely
+did even at +160, because past weeks with large aftershock sequences make
+big counts look ordinary.
 
 ## If a test fails calibration
 

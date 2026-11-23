@@ -9,6 +9,7 @@ from spacegeo.evaluation.anomaly import RegionConfig
 from spacegeo.monitoring.calibration import CalibrationSummary
 from spacegeo.monitoring.config import WeeklyScanConfig
 from spacegeo.monitoring.report import ScanReportWriter
+from spacegeo.monitoring.validation import ValidationSuite
 from spacegeo.monitoring.weekly_scan import WeeklyAnomalyScan
 
 REGIONS = tuple(
@@ -53,13 +54,39 @@ def test_weeks_are_anchored_and_complete() -> None:
 
 
 def test_validation_is_calibrated_on_null_data() -> None:
-    results = WeeklyAnomalyScan(CONFIG, _null_catalog()).validate()
+    results = WeeklyAnomalyScan(CONFIG, _null_catalog()).validate().results
     assert set(results["test"]) == {"activity", "mainshocks"}
-    assert results["window_start"].min() >= CONFIG.validation.start
+    assert results["window_start"].min() >= CONFIG.validation.start + CONFIG.gap
     assert results["window_start"].max() < CONFIG.validation.end
     summary = CalibrationSummary().by_test(results)
     assert bool(summary["calibrated"].all())
     assert summary.loc["activity", "observed_over_expected"] == pytest.approx(1.0, abs=0.05)
+    assert summary["pit_max_bin_deviation"].to_numpy().max() < 0.03  # PIT ~ uniform
+
+
+def test_validation_suite_outputs(tmp_path: Path) -> None:
+    scan = WeeklyAnomalyScan(CONFIG, _null_catalog())
+    report = ValidationSuite(CONFIG, scan, sizes=(1, 10, 30)).run()
+
+    comparison = report.model_comparison
+    assert comparison.loc[("activity", "poisson"), "info_gain"] == pytest.approx(0.0)
+    # On Poisson data no model should beat Poisson by a meaningful margin.
+    assert comparison["info_gain"].to_numpy().max() < 0.02
+
+    power = report.power.set_index(["test", "region", "added"])["power"]
+    for test in ("activity", "mainshocks"):
+        assert power.loc[(test, "r0", 30)] > power.loc[(test, "r0", 1)]
+        assert power.loc[(test, "r0", 30)] > 0.95
+        assert power.loc[(test, "r0", 1)] < 0.05
+
+    writer = ScanReportWriter(tmp_path)
+    writer.write_validation(report)
+    out = tmp_path / "validation"
+    for name in ("pit.png", "power.png", "README.md", "model_comparison.csv", "power.csv"):
+        assert (out / name).exists(), name
+    first = (out / "pit.png").read_bytes(), (out / "weekly.csv.gz").read_bytes()
+    writer.write_validation(report)
+    assert ((out / "pit.png").read_bytes(), (out / "weekly.csv.gz").read_bytes()) == first
 
 
 def test_predict_scores_test_weeks_and_report_writes(tmp_path: Path) -> None:
@@ -70,25 +97,19 @@ def test_predict_scores_test_weeks_and_report_writes(tmp_path: Path) -> None:
     )
     catalog = pd.concat([catalog, burst]).sort_index()
     scan = WeeklyAnomalyScan(CONFIG, catalog)
-    results = scan.predict(AS_OF)
-    assert results["window_start"].min() >= CONFIG.refit.end
+    results = scan.predict(AS_OF).results
+    assert results["window_start"].min() >= CONFIG.refit.end + CONFIG.gap
     latest = results.loc[
         (results["window_start"] == results["window_start"].max()) & (results["test"] == "activity")
     ]
     assert latest.set_index("region").loc["r3", "flag"] == "excess"
 
-    validation = scan.validate()
-    writer = ScanReportWriter(tmp_path)
-    calibration = CalibrationSummary().by_test(validation)
-    writer.write_validation(validation, calibration, CalibrationSummary.by_region(validation))
-    writer.write_predictions(results, calibration)
+    calibration = CalibrationSummary().by_test(scan.validate().results)
+    ScanReportWriter(tmp_path).write_predictions(results, calibration)
     text = (tmp_path / "test" / "latest.md").read_text()
     assert "## activity" in text
     assert "r3" in text
     assert "calibrated" in text
-    first = (tmp_path / "validation" / "weekly.csv.gz").read_bytes()
-    writer.write_validation(validation, calibration, CalibrationSummary.by_region(validation))
-    assert (tmp_path / "validation" / "weekly.csv.gz").read_bytes() == first
 
 
 def test_split_must_be_ordered() -> None:
@@ -98,4 +119,15 @@ def test_split_must_be_ordered() -> None:
             train_start=CONFIG.val_start,
             val_start=CONFIG.train_start,
             test_start=CONFIG.test_start,
+        )
+
+
+def test_gap_must_cover_horizon() -> None:
+    with pytest.raises(ValueError, match="gap_days"):
+        WeeklyScanConfig(
+            regions=REGIONS,
+            train_start=CONFIG.train_start,
+            val_start=CONFIG.val_start,
+            test_start=CONFIG.test_start,
+            gap_days=3,
         )

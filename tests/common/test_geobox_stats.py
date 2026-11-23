@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from spacegeo.common.geo import GeoBox
-from spacegeo.common.stats import benjamini_hochberg
+from spacegeo.common.stats import benjamini_hochberg, block_bootstrap_ci
 from spacegeo.common.time import TimeWindow, to_utc
 
 
@@ -52,3 +52,15 @@ def test_calendar_year_and_clip() -> None:
     assert clipped is not None
     assert clipped.end == to_utc("2026-11-23T00:00Z")
     assert year.clip_end(to_utc("2026-01-01T00:00Z")) is None
+
+
+def test_block_bootstrap_covers_mean_and_widens_with_autocorrelation() -> None:
+    rng = np.random.default_rng(0)
+    iid = rng.normal(0, 1, 520)
+    lo, hi = block_bootstrap_ci(iid, block_length=13)
+    assert lo < iid.mean() < hi
+    walk = np.repeat(rng.normal(0, 1, 40), 13)  # strongly autocorrelated
+    wlo, whi = block_bootstrap_ci(walk, block_length=13)
+    assert (whi - wlo) > 2 * (hi - lo)
+    with pytest.raises(ValueError, match="block"):
+        block_bootstrap_ci([1.0, 2.0], block_length=13)

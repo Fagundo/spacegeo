@@ -68,7 +68,8 @@ def test_horizon_must_be_positive() -> None:
 def test_empirical_uses_historical_fractions() -> None:
     model = EmpiricalCountModel(duration(days=7)).fit(_weekly([0, 0, 0, 1, 0, 0, 15, 0, 1, 3]))
     assert model.expected_count() == pytest.approx(2.0)
-    assert model.survival(1) == pytest.approx(0.4)
-    assert model.survival(4) == pytest.approx(0.1)
-    assert model.survival(16) == 0.0
-    assert model.cdf(0) == pytest.approx(0.6)
+    assert model.survival(1) == pytest.approx(0.4, abs=0.05)
+    assert model.survival(4) == pytest.approx(0.1, abs=0.02)
+    assert 0.0 < model.survival(16) < 0.05
+    assert model.cdf(0) == pytest.approx(0.6, abs=0.05)
+    assert np.isfinite(np.log(model.pmf(200)))

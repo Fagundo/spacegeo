@@ -9,7 +9,8 @@ look-elsewhere effect of scanning many places at once.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from types import MappingProxyType
 from typing import Self
 
 import numpy as np
@@ -33,7 +34,13 @@ RESULT_COLUMNS = (
     "q_low",
     "flag",
     "max_mag",
+    "log_score",
+    "pit",
 )
+"""``log_score``: natural log of the forecast probability of the observed
+count (a proper scoring rule; higher is better). ``pit``: randomized
+probability integral transform, uniform on [0, 1] if the forecast is
+calibrated."""
 
 
 class RegionConfig(BaseConfig):
@@ -73,6 +80,7 @@ class RegionalAnomalyScanner(FittableMixin):
         model_factory: Builds a fresh, unfitted :class:`CountModel`; its
             horizon is the length of every scored window.
         fdr: False-discovery rate used for the ``flag`` column.
+        seed: Seed for the randomized PIT (outputs are reproducible).
     """
 
     def __init__(
@@ -80,6 +88,7 @@ class RegionalAnomalyScanner(FittableMixin):
         regions: Sequence[RegionConfig],
         model_factory: Callable[[], CountModel],
         fdr: float = 0.05,
+        seed: int = 0,
     ) -> None:
         if not regions:
             raise ValueError("Need at least one region.")
@@ -88,6 +97,13 @@ class RegionalAnomalyScanner(FittableMixin):
         self._fdr = fdr
         self._models: dict[str, CountModel] = {}
         self._fit_end: pd.Timestamp | None = None
+        self._seed = seed
+
+    @property
+    def models(self) -> Mapping[str, CountModel]:
+        """Fitted count model per region name."""
+        self._require_fitted()
+        return MappingProxyType(self._models)
 
     def fit(self, events: pd.DataFrame, baseline: TimeWindow) -> Self:
         """Fit each region's count model on events inside ``baseline``.
@@ -118,7 +134,8 @@ class RegionalAnomalyScanner(FittableMixin):
         self._require_fitted()
         self._check_windows(windows)
         per_region = [_RegionEvents(r, events) for r in self._regions]
-        tables = [self._score_window(per_region, w) for w in windows]
+        rng = np.random.default_rng(self._seed)
+        tables = [self._score_window(per_region, w, rng) for w in windows]
         return pd.concat(tables, ignore_index=True)
 
     def scan(
@@ -142,30 +159,45 @@ class RegionalAnomalyScanner(FittableMixin):
             if self._fit_end is not None and window.start < self._fit_end:
                 raise ValueError("Scored windows must start after the fit window ends.")
 
-    def _score_window(self, per_region: list[_RegionEvents], window: TimeWindow) -> pd.DataFrame:
+    def _score_window(
+        self, per_region: list[_RegionEvents], window: TimeWindow, rng: np.random.Generator
+    ) -> pd.DataFrame:
         rows = [
-            self._score_region(r, e, window) for r, e in zip(self._regions, per_region, strict=True)
+            self._score_region(r, e, window, rng)
+            for r, e in zip(self._regions, per_region, strict=True)
         ]
         table = pd.DataFrame(rows)
         table.insert(0, "window_start", window.start)
         return self._add_fdr(table)
 
     def _score_region(
-        self, region: RegionConfig, events: _RegionEvents, window: TimeWindow
+        self,
+        region: RegionConfig,
+        events: _RegionEvents,
+        window: TimeWindow,
+        rng: np.random.Generator,
     ) -> dict[str, object]:
         model = self._models[region.name]
         mags = events.slice(window)
         observed = int(mags.size)
         expected = model.expected_count()
+        below = model.cdf(observed - 1)
+        at_or_below = model.cdf(observed)
         return {
             "region": region.name,
             "observed": observed,
             "expected": expected,
             "ratio": observed / expected if expected > 0 else np.inf,
             "p_high": model.survival(observed),
-            "p_low": model.cdf(observed),
+            "p_low": at_or_below,
             "max_mag": float(mags.max()) if observed else np.nan,
+            "log_score": self._log_score(model, observed),
+            "pit": below + float(rng.uniform()) * (at_or_below - below),
         }
+
+    @staticmethod
+    def _log_score(model: CountModel, observed: int) -> float:
+        return float(model.log_pmf(observed))  # -inf only if the model rules it out
 
     def _add_fdr(self, table: pd.DataFrame) -> pd.DataFrame:
         n = len(table)

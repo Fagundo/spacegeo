@@ -4,7 +4,8 @@ Reads the committed catalog archive (run ``scripts/update_catalog.py`` first)
 and writes to ``results/anomaly/``:
 
 * ``validate``: fit on train (2000-2019), score every validation week
-  (2020-2025) and summarize calibration. Skipped if already done unless
+  (2020-2025): calibration (tail rates, PIT), log-score model comparison
+  with block-bootstrap intervals, and injection detection power. Skipped if already done unless
   ``--force``; the result does not change once validation data settle.
 * ``predict``: refit on train + validation, score every complete test week
   (2026 onward) up to ``--as-of`` and write ``test/latest.md``.
@@ -27,9 +28,9 @@ from spacegeo.common.log import get_logger
 from spacegeo.common.paths import ProjectPaths
 from spacegeo.common.time import to_utc
 from spacegeo.data.io.catalog_archive import CatalogArchive
-from spacegeo.monitoring.calibration import CalibrationSummary
 from spacegeo.monitoring.config import WeeklyScanConfig
 from spacegeo.monitoring.report import ScanReportWriter
+from spacegeo.monitoring.validation import ValidationSuite
 from spacegeo.monitoring.weekly_scan import WeeklyAnomalyScan
 
 _log = get_logger("scan_anomalies")
@@ -43,21 +44,20 @@ class ScanCommand:
         catalog = CatalogArchive(project.catalog_archive("comcat", config.mc)).read()
         self._scan = WeeklyAnomalyScan(config, catalog)
         self._writer = ScanReportWriter(project.results / "anomaly")
-        self._calibration = CalibrationSummary(alpha=config.fdr)
 
     def validate(self, *, force: bool) -> None:
         """Run and store the validation span."""
         if (self._writer.validation_dir / "by_test.csv").exists() and not force:
             _log.info("Validation already stored; use --force to redo it.")
             return
-        results = self._scan.validate()
-        by_test = self._calibration.by_test(results)
-        self._writer.write_validation(results, by_test, self._calibration.by_region(results))
-        _log.info("Validation summary:\n%s", by_test.round(4).to_string())
+        report = ValidationSuite(self._config, self._scan).run()
+        self._writer.write_validation(report)
+        _log.info("Validation summary:\n%s", report.by_test.round(4).to_string())
+        _log.info("Model comparison:\n%s", report.model_comparison.round(4).to_string())
 
     def predict(self, as_of: pd.Timestamp) -> None:
         """Score the test span up to ``as_of``."""
-        results = self._scan.predict(as_of)
+        results = self._scan.predict(as_of).results
         by_test_path = self._writer.validation_dir / "by_test.csv"
         calibration = pd.read_csv(by_test_path, index_col="test") if by_test_path.exists() else None
         self._writer.write_predictions(results, calibration)

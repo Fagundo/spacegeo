@@ -148,8 +148,12 @@ class CountModel(FittableMixin, ABC):
 
     def pmf(self, k: npt.ArrayLike) -> npt.NDArray[np.float64]:
         """P(N = k) for non-negative integer(s) ``k``."""
+        return np.exp(self.log_pmf(k))
+
+    def log_pmf(self, k: npt.ArrayLike) -> npt.NDArray[np.float64]:
+        """Return log P(N = k), computed without underflow (for log scores)."""
         self._require_fitted()
-        return np.exp(self._log_pmf(np.asarray(k, dtype=np.int64)))
+        return self._log_pmf(np.asarray(k, dtype=np.int64))
 
     def cdf(self, n: int) -> float:
         """P(N <= n)."""

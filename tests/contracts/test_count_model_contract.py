@@ -90,3 +90,11 @@ def test_empty_history_gives_zero_rate(model_cls: type[CountModel]) -> None:
     model = model_cls.example().fit(empty)
     assert model.expected_count() == 0.0
     assert model.survival(1) == 0.0
+
+
+@pytest.mark.parametrize("model_cls", MODELS, ids=lambda c: c.__qualname__)
+def test_log_pmf_is_finite_far_in_the_tail(model_cls: type[CountModel]) -> None:
+    model = model_cls.example().fit(_data())
+    logp = model.log_pmf([0, 500])
+    assert np.isfinite(logp[1]) or model.pmf(500) == 0.0
+    np.testing.assert_allclose(np.exp(logp[0]), model.pmf(0))

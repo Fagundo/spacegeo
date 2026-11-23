@@ -6,6 +6,7 @@ import math
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 
 from spacegeo.models.base import COUNT_MODELS, CountModel, ModelData
 
@@ -82,46 +83,64 @@ class NegativeBinomialCountModel(CountModel):
 
 @COUNT_MODELS.register("empirical")
 class EmpiricalCountModel(CountModel):
-    """The observed distribution of historical window counts, used directly.
+    """Historical window counts, used directly, with a thin heavy tail.
 
-    P(N >= n) is the fraction of past windows with at least ``n`` events, so
-    heavy-tailed aftershock sequences are handled without assuming a shape.
-    With ~1000 historical windows, p-values resolve to ~0.001; a count above
-    every past window gets p = 0.
+    The pmf is a mixture: weight ``n / (n + pseudo_windows)`` on the
+    empirical frequencies of the ``n`` historical windows, the rest on a
+    negative binomial fitted to the same counts. The tail keeps every count
+    possible, so log scores stay finite and a count above every past window
+    gets a small but non-zero p-value instead of exactly 0.
+
+    Args:
+        horizon: Window length.
+        pseudo_windows: Weight of the negative binomial tail, in windows.
     """
 
-    _freq: npt.NDArray[np.float64] = np.array([1.0])
-    _upper: npt.NDArray[np.float64] = np.array([1.0])
-    _lower: npt.NDArray[np.float64] = np.array([1.0])
+    def __init__(self, horizon: pd.Timedelta, pseudo_windows: float = 1.0) -> None:
+        super().__init__(horizon)
+        if pseudo_windows <= 0:
+            raise ValueError("pseudo_windows must be positive.")
+        self._pseudo = pseudo_windows
+        self._tail = NegativeBinomialCountModel(horizon)
+        self._weight = 1.0
+        self._freq: npt.NDArray[np.float64] = np.array([1.0])
+        self._upper: npt.NDArray[np.float64] = np.array([1.0])
+        self._lower: npt.NDArray[np.float64] = np.array([1.0])
 
     def expected_count(self) -> float:
-        """Mean historical count per horizon."""
+        """Mixture mean per horizon."""
         self._require_fitted()
-        return float((np.arange(self._freq.size) * self._freq).sum())
+        empirical = float((np.arange(self._freq.size) * self._freq).sum())
+        return self._weight * empirical + (1 - self._weight) * self._tail.expected_count()
 
     def survival(self, n: int) -> float:
-        """Fraction of historical windows with at least ``n`` events."""
+        """P(N >= n)."""
         self._require_fitted()
         if n <= 0:
             return 1.0
-        return float(min(1.0, self._upper[n])) if n < self._upper.size else 0.0
+        empirical = float(self._upper[n]) if n < self._upper.size else 0.0
+        return min(1.0, self._weight * empirical + (1 - self._weight) * self._tail.survival(n))
 
     def cdf(self, n: int) -> float:
-        """Fraction of historical windows with at most ``n`` events."""
+        """P(N <= n)."""
         self._require_fitted()
         if n < 0:
             return 0.0
-        return float(min(1.0, self._lower[min(n, self._lower.size - 1)]))
+        empirical = float(self._lower[min(n, self._lower.size - 1)])
+        return min(1.0, self._weight * empirical + (1 - self._weight) * self._tail.cdf(n))
 
     def _fit(self, data: ModelData) -> None:
         counts = self.window_counts(data)
+        self._tail.fit(data)
+        self._weight = counts.size / (counts.size + self._pseudo)
         self._freq = np.bincount(counts).astype(np.float64) / counts.size
         self._upper = np.cumsum(self._freq[::-1])[::-1]  # monotone P(N >= k)
         self._lower = np.cumsum(self._freq)  # monotone P(N <= k)
 
     def _log_pmf(self, k: npt.NDArray[np.int64]) -> npt.NDArray[np.float64]:
-        out = np.full(k.shape, -np.inf)
+        empirical = np.zeros(k.shape)
         valid = (k >= 0) & (k < self._freq.size)
+        empirical[valid] = self._freq[k[valid]]
+        tail = self._tail.pmf(k)
         with np.errstate(divide="ignore"):
-            out[valid] = np.log(self._freq[k[valid]])
-        return out
+            return np.log(self._weight * empirical + (1 - self._weight) * tail)

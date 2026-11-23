@@ -8,6 +8,8 @@ from pathlib import Path
 import pandas as pd
 
 from spacegeo.common.time import duration
+from spacegeo.monitoring.plots import ValidationPlots
+from spacegeo.monitoring.validation import ValidationReport
 
 _FLOAT = "%.6g"
 _TABLE_COLUMNS = [
@@ -33,8 +35,9 @@ class ScanReportWriter:
         root: Output directory, e.g. ``results/anomaly``.
     """
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, plots: ValidationPlots | None = None) -> None:
         self._root = root
+        self._plots = plots or ValidationPlots()
 
     @property
     def validation_dir(self) -> Path:
@@ -46,15 +49,64 @@ class ScanReportWriter:
         """Live test-period outputs."""
         return self._root / "test"
 
-    def write_validation(
-        self, results: pd.DataFrame, by_test: pd.DataFrame, by_region: pd.DataFrame
-    ) -> None:
-        """Store validation weeks and their calibration summaries."""
+    def write_validation(self, report: ValidationReport) -> None:
+        """Store validation weeks, calibration, model comparison and power."""
         out = self.validation_dir
         out.mkdir(parents=True, exist_ok=True)
-        self._csv(results, out / "weekly.csv.gz", index=False)
-        self._csv(by_test, out / "by_test.csv")
-        self._csv(by_region, out / "by_region.csv")
+        self._csv(report.results, out / "weekly.csv.gz", index=False)
+        self._csv(report.by_test, out / "by_test.csv")
+        self._csv(report.by_region, out / "by_region.csv")
+        self._csv(report.pit_histogram, out / "pit_histogram.csv", index=False)
+        self._csv(report.model_comparison, out / "model_comparison.csv")
+        self._csv(report.power, out / "power.csv", index=False)
+        self._csv(report.min_detectable, out / "min_detectable.csv", index=False)
+        self._plots.pit(report.pit_histogram, out / "pit.png")
+        self._plots.power(report.power, out / "power.png")
+        (out / "README.md").write_text(self._validation_markdown(report))
+
+    def _validation_markdown(self, report: ValidationReport) -> str:
+        comparison = report.model_comparison.reset_index()
+        detectable = report.min_detectable.pivot(
+            index="region", columns="test", values="min_detectable_added"
+        )
+        lines = [
+            "# Validation (train fit, validation weeks scored)",
+            "",
+            "Pre-registration: `docs/experiments/anomaly-scan.md`.",
+            "",
+            "## Calibration of the live tests",
+            "",
+            self._frame_table(report.by_test.reset_index()),
+            "",
+            "![PIT histogram](pit.png)",
+            "",
+            "## Model comparison",
+            "",
+            "Mean log score per region-week; information gain vs. Poisson; 95% intervals",
+            "from a 13-week moving-block bootstrap.",
+            "",
+            self._frame_table(comparison),
+            "",
+            "## Detection power (injected extra events in one region-week)",
+            "",
+            "![Power curve](power.png)",
+            "",
+            "Smallest burst flagged in at least 80% of validation weeks",
+            "(blank: never at the tested sizes):",
+            "",
+            self._frame_table(detectable.reset_index()),
+        ]
+        return "\n".join(lines) + "\n"
+
+    @staticmethod
+    def _frame_table(frame: pd.DataFrame) -> str:
+        columns = [str(c) for c in frame.columns]
+        header = "| " + " | ".join(columns) + " |"
+        rule = "|" + "---|" * len(columns)
+        rows = [
+            "| " + " | ".join(_cell(v) for v in row) + " |" for row in frame.itertuples(index=False)
+        ]
+        return "\n".join([header, rule, *rows])
 
     def write_predictions(self, results: pd.DataFrame, calibration: pd.DataFrame | None) -> None:
         """Store every test week and a Markdown summary of the latest one."""
@@ -100,18 +152,12 @@ class ScanReportWriter:
         )
         return [f"Validation verdict: {verdicts}. See `../validation/by_test.csv`."]
 
-    @staticmethod
-    def _md_table(table: pd.DataFrame, *, with_week: bool = False) -> str:
+    def _md_table(self, table: pd.DataFrame, *, with_week: bool = False) -> str:
         columns = (["window_start", "test"] if with_week else []) + _TABLE_COLUMNS
         frame = table.loc[:, columns].copy()
         if with_week:
             frame["window_start"] = pd.to_datetime(frame["window_start"]).dt.strftime("%Y-%m-%d")
-        header = "| " + " | ".join(columns) + " |"
-        rule = "|" + "---|" * len(columns)
-        rows = [
-            "| " + " | ".join(_cell(v) for v in row) + " |" for row in frame.itertuples(index=False)
-        ]
-        return "\n".join([header, rule, *rows])
+        return self._frame_table(frame)
 
 
 def _cell(value: object) -> str:

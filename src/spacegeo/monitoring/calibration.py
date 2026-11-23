@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 
@@ -44,12 +45,37 @@ class CalibrationSummary:
             )
         )
         summary["observed_over_expected"] = summary["observed"] / summary["expected"]
+        summary["mean_log_score"] = table.groupby("test")["log_score"].mean()
+        summary["pit_max_bin_deviation"] = self._pit_deviation(results)
         limit = self._tolerance * a
         summary["calibrated"] = (summary["rate_p_high_le_alpha"] <= limit) & (
             summary["rate_p_low_le_alpha"] <= limit
         )
         summary.insert(0, "alpha", a)
         return summary
+
+    def _pit_deviation(self, results: pd.DataFrame, bins: int = 10) -> pd.Series:
+        hist = self.pit_histogram(results, bins)
+        hist["deviation"] = (hist["share"] - 1 / bins).abs()
+        return pd.Series(hist.groupby("test")["deviation"].max())
+
+    @staticmethod
+    def pit_histogram(results: pd.DataFrame, bins: int = 10) -> pd.DataFrame:
+        """Share of region-weeks per PIT bin, per test (uniform = 1 / bins).
+
+        A U shape means the forecast is overconfident (too narrow), a hump
+        means underconfident, a slope means biased.
+        """
+        edges = np.linspace(0.0, 1.0, bins + 1)
+        rows = []
+        for test, table in results.groupby("test", sort=True):
+            counts, _ = np.histogram(table["pit"].to_numpy(dtype=np.float64), bins=edges)
+            share = counts / counts.sum()
+            rows += [
+                {"test": test, "bin_low": lo, "bin_high": hi, "share": s}
+                for lo, hi, s in zip(edges[:-1], edges[1:], share, strict=True)
+            ]
+        return pd.DataFrame(rows)
 
     @staticmethod
     def by_region(results: pd.DataFrame) -> pd.DataFrame:
