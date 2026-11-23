@@ -56,18 +56,19 @@ def catalog() -> pd.DataFrame:
 
 def test_experiment_runs_scores_and_reports(catalog: pd.DataFrame, tmp_path: Path) -> None:
     result = EventForecastExperiment(_config(), REGIONS, catalog).run()
-    scores = result.scores.set_index(["target", "model"])
-    assert set(scores.index.get_level_values("model")) == {
+    # Plain records rather than pandas indexing: simple to read and type-check.
+    rows = {(str(r["target"]), str(r["model"])): r for r in result.scores.to_dict("records")}
+    assert {model for _, model in rows} == {
         "climatology",
         "etas_raw",
         REFERENCE,
         "gradient_boosting",
     }
-    assert np.isfinite(scores["mean_log_score"]).all()
-    assert scores.loc[("y_primary", REFERENCE), f"gain_vs_{REFERENCE}"] == pytest.approx(0.0)
+    assert all(np.isfinite(float(r["mean_log_score"])) for r in rows.values())
+    reference = rows[("y_primary", REFERENCE)]
+    assert float(reference[f"gain_vs_{REFERENCE}"]) == pytest.approx(0.0)
     # ETAS carries real information on a clustered ETAS-generated catalog.
-    gain_lo = scores.loc[[("y_primary", REFERENCE)], "gain_vs_climatology_lo"].to_numpy()
-    assert gain_lo[0] > 0
+    assert float(reference["gain_vs_climatology_lo"]) > 0
     assert (
         result.predictions["week"].min()
         >= _config().weeks(_config().val_start, _config().val_end)[0].start
