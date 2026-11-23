@@ -7,7 +7,7 @@ import pytest
 from spacegeo.common.time import TimeWindow, duration, to_utc
 from spacegeo.evaluation.anomaly import BoxConfig, RegionConfig
 from spacegeo.monitoring.calibration import CalibrationSummary
-from spacegeo.monitoring.config import WeeklyScanConfig
+from spacegeo.monitoring.config import CatalogsConfig, WeeklyScanConfig
 from spacegeo.monitoring.report import ScanReportWriter
 from spacegeo.monitoring.validation import ValidationSuite
 from spacegeo.monitoring.weekly_scan import WeeklyAnomalyScan
@@ -162,3 +162,13 @@ def test_overlapping_regions_rejected() -> None:
             val_start=CONFIG.val_start,
             test_start=CONFIG.test_start,
         )
+
+
+def test_catalogs_config_names_known_regions() -> None:
+    root = Path(__file__).parents[2]
+    catalogs = CatalogsConfig.from_yaml(root / "configs" / "catalogs.yaml")
+    regions = {r.name for r in RegionConfig.load_all(root / catalogs.regions_file)}
+    assert {c.region for c in catalogs.catalogs if c.region} <= regions
+    names = [c.name for c in catalogs.catalogs]
+    assert "comcat_M4.5" in names  # the weekly scan reads this archive
+    assert len(set(names)) == len(names)

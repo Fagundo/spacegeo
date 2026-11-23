@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 from pydantic import AwareDatetime, Field, model_validator
 
@@ -72,3 +74,34 @@ class WeeklyScanConfig(BaseConfig):
     def refit(self) -> TimeWindow:
         """Training + validation, used to fit the models for test weeks."""
         return TimeWindow(to_utc(self.train_start), to_utc(self.test_start))
+
+
+class CatalogSpec(BaseConfig):
+    """One committed catalog archive kept current by the weekly workflow.
+
+    Attributes:
+        name: Archive directory under ``data/catalog/``.
+        min_magnitude: Lowest magnitude downloaded.
+        chunk: Download chunk frequency (pandas alias); smaller for low magnitudes.
+        region: Optional region name (from ``regions_file``) whose boxes bound
+            the query; ``None`` = global.
+    """
+
+    name: str
+    min_magnitude: float
+    chunk: str = "YS"
+    region: str | None = None
+
+
+class CatalogsConfig(BaseConfig):
+    """Every catalog archive the workflow maintains.
+
+    Attributes:
+        regions_file: YAML file whose ``regions:`` list defines named regions.
+        first_year: Earliest year kept.
+        catalogs: The archives.
+    """
+
+    regions_file: Path
+    first_year: int = 2000
+    catalogs: tuple[CatalogSpec, ...] = Field(min_length=1)

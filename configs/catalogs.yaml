@@ -1,0 +1,24 @@
+# Catalog archives kept in data/catalog/ and refreshed by the weekly workflow
+# (scripts/update_catalog.py). Missing years are downloaded; the last two
+# years are always re-downloaded because ComCat revises recent events.
+regions_file: configs/ring_of_fire_scan.yaml
+first_year: 2000
+catalogs:
+  # Global M4.5: the Ring of Fire anomaly scan and ETAS baseline.
+  - name: comcat_M4.5
+    min_magnitude: 4.5
+    chunk: YS
+  # M2.5 where US networks record small quakes. Quarterly chunks keep each
+  # query under the service's 20,000-event limit.
+  - name: comcat_M2.5_alaska_aleutians
+    min_magnitude: 2.5
+    chunk: QS
+    region: alaska_aleutians
+  - name: comcat_M2.5_cascadia
+    min_magnitude: 2.5
+    chunk: QS
+    region: cascadia
+  - name: comcat_M2.5_california_baja
+    min_magnitude: 2.5
+    chunk: QS
+    region: california_baja

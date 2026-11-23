@@ -1,8 +1,8 @@
 name: Weekly anomaly scan
 
-# Downloads/refreshes the USGS ComCat catalog, runs the Ring of Fire scan and
-# commits the catalog (data/catalog/) and results (results/anomaly/) to the
-# branch it runs on.
+# Downloads/refreshes the USGS ComCat archives in configs/catalogs.yaml, runs
+# the Ring of Fire scan and commits the catalogs (data/catalog/) and results
+# (results/anomaly/) to the branch it runs on.
 
 on:
   schedule:
