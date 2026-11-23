@@ -1,0 +1,15 @@
+{
+  "criterion_met": false,
+  "primary": {
+    "base_rate": 0.09049773755656108,
+    "brier_skill_vs_climatology": 0.009113350401511955,
+    "gain_vs_climatology": 0.0019400696155691011,
+    "gain_vs_climatology_hi": 0.005807695925230573,
+    "gain_vs_climatology_lo": -0.0011546897417443647,
+    "gain_vs_etas_recalibrated": -0.0002726753085373922,
+    "gain_vs_etas_recalibrated_hi": 0.001724032524854746,
+    "gain_vs_etas_recalibrated_lo": -0.0021733841891126305,
+    "mean_log_score": -0.2757252756531361,
+    "roc_auc": 0.7314110869264788
+  }
+}
