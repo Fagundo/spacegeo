@@ -4,19 +4,23 @@ import pytest
 
 from spacegeo.common.exceptions import NotFittedError
 from spacegeo.common.time import TimeWindow, duration, to_utc
-from spacegeo.evaluation.anomaly import RegionalAnomalyScanner, RegionConfig
+from spacegeo.evaluation.anomaly import BoxConfig, RegionalAnomalyScanner, RegionConfig
 from spacegeo.models.count import PoissonCountModel
 
 BASELINE = TimeWindow(to_utc("2000-01-01T00:00Z"), to_utc("2020-01-01T00:00Z"))
 OBS = TimeWindow(to_utc("2026-11-16T00:00Z"), to_utc("2026-11-23T00:00Z"))
 REGIONS = [
     RegionConfig(
-        name=f"r{i}", lat_min_deg=10 * i, lat_max_deg=10 * i + 5, lon_min_deg=0, lon_max_deg=5
+        name=f"r{i}",
+        boxes=(
+            BoxConfig(lat_min_deg=10 * i, lat_max_deg=10 * i + 5, lon_min_deg=0, lon_max_deg=5),
+        ),
     )
     for i in range(5)
 ] + [
     RegionConfig(
-        name="dateline", lat_min_deg=-30, lat_max_deg=-20, lon_min_deg=175, lon_max_deg=-175
+        name="dateline",
+        boxes=(BoxConfig(lat_min_deg=-30, lat_max_deg=-20, lon_min_deg=175, lon_max_deg=-175),),
     )
 ]
 
@@ -29,13 +33,16 @@ def _events(rng: np.random.Generator, burst_region: int, burst: int) -> pd.DataF
         n_hist = rng.poisson(2.0 * weeks)
         t = BASELINE.start + pd.to_timedelta(rng.uniform(0, span, n_hist), unit="s")
         rows.append(
-            pd.DataFrame({"lat_deg": region.lat_min_deg + 1, "lon_deg": 1.0, "mag": 4.8}, index=t)
+            pd.DataFrame(
+                {"lat_deg": region.boxes[0].lat_min_deg + 1, "lon_deg": 1.0, "mag": 4.8}, index=t
+            )
         )
         n_obs = burst if i == burst_region else 2
         t_obs = OBS.start + pd.to_timedelta(rng.uniform(0, 6 * 86400, n_obs), unit="s")
         rows.append(
             pd.DataFrame(
-                {"lat_deg": region.lat_min_deg + 1, "lon_deg": 1.0, "mag": 5.0}, index=t_obs
+                {"lat_deg": region.boxes[0].lat_min_deg + 1, "lon_deg": 1.0, "mag": 5.0},
+                index=t_obs,
             )
         )
     dateline = pd.DataFrame(

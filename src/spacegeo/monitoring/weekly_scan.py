@@ -73,7 +73,9 @@ class WeeklyAnomalyScan:
         tests: tuple[ScanTest, ...] | None = None,
     ) -> None:
         self._config = config
-        self._tests = tests or self._default_tests(config, catalog)
+        self._tests = tests or self._default_tests(
+            config, MagnitudeCut(config.mc).transform(catalog)
+        )
 
     @property
     def tests(self) -> tuple[ScanTest, ...]:
@@ -81,9 +83,8 @@ class WeeklyAnomalyScan:
         return self._tests
 
     @staticmethod
-    def _default_tests(config: WeeklyScanConfig, catalog: pd.DataFrame) -> tuple[ScanTest, ...]:
+    def _default_tests(config: WeeklyScanConfig, cut: pd.DataFrame) -> tuple[ScanTest, ...]:
         horizon = duration(days=config.horizon_days)
-        cut = MagnitudeCut(config.mc).transform(catalog)
         mainshocks = GardnerKnopoffDeclusterer(include_foreshocks=False).transform(cut)
         return (
             ScanTest("activity", cut, lambda: EmpiricalCountModel(horizon)),

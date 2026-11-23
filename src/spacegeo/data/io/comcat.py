@@ -42,8 +42,15 @@ class ComCatReader(DatasetReader):
         )
     )
 
+    TRUNCATION_ROWS = 20000
+    """USGS FDSN per-query limit: a file this long was probably cut off."""
+
     def _parse(self, path: Path) -> pd.DataFrame:
         raw = pd.read_csv(path, dtype={"magType": "string", "id": "string"})
+        if len(raw) >= self.TRUNCATION_ROWS:
+            raise SchemaError(
+                f"{path.name}: {len(raw)} rows hits the service limit; use smaller download chunks."
+            )
         missing = sorted({"time", *self.RENAME} - set(raw.columns))
         if missing:
             raise SchemaError(f"{path.name}: ComCat CSV is missing columns {missing}.")

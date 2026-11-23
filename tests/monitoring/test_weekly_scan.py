@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from spacegeo.common.time import TimeWindow, duration, to_utc
-from spacegeo.evaluation.anomaly import RegionConfig
+from spacegeo.evaluation.anomaly import BoxConfig, RegionConfig
 from spacegeo.monitoring.calibration import CalibrationSummary
 from spacegeo.monitoring.config import WeeklyScanConfig
 from spacegeo.monitoring.report import ScanReportWriter
@@ -14,7 +14,10 @@ from spacegeo.monitoring.weekly_scan import WeeklyAnomalyScan
 
 REGIONS = tuple(
     RegionConfig(
-        name=f"r{i}", lat_min_deg=10 * i, lat_max_deg=10 * i + 5, lon_min_deg=0, lon_max_deg=5
+        name=f"r{i}",
+        boxes=(
+            BoxConfig(lat_min_deg=10 * i, lat_max_deg=10 * i + 5, lon_min_deg=0, lon_max_deg=5),
+        ),
     )
     for i in range(6)
 )
@@ -36,7 +39,7 @@ def _null_catalog(seed: int = 0) -> pd.DataFrame:
     for region in REGIONS:
         n = rng.poisson(3 * weeks)
         t = start + pd.to_timedelta(rng.uniform(0, (end - start).total_seconds(), n), unit="s")
-        lat = rng.uniform(region.lat_min_deg, region.lat_max_deg, n)
+        lat = rng.uniform(region.boxes[0].lat_min_deg, region.boxes[0].lat_max_deg, n)
         lon = rng.uniform(0, 5, n)
         frames.append(
             pd.DataFrame(
@@ -130,4 +133,32 @@ def test_gap_must_cover_horizon() -> None:
             val_start=CONFIG.val_start,
             test_start=CONFIG.test_start,
             gap_days=3,
+        )
+
+
+def test_committed_config_loads_with_disjoint_regions() -> None:
+    cfg = WeeklyScanConfig.from_yaml(
+        Path(__file__).parents[2] / "configs" / "ring_of_fire_scan.yaml"
+    )
+    assert len(cfg.regions) == 17
+    assert cfg.mc == 4.5
+
+
+def test_overlapping_regions_rejected() -> None:
+    overlapping = (
+        RegionConfig(
+            name="a",
+            boxes=(BoxConfig(lat_min_deg=0, lat_max_deg=10, lon_min_deg=0, lon_max_deg=10),),
+        ),
+        RegionConfig(
+            name="b",
+            boxes=(BoxConfig(lat_min_deg=5, lat_max_deg=15, lon_min_deg=5, lon_max_deg=15),),
+        ),
+    )
+    with pytest.raises(ValueError, match="overlap: a/b"):
+        WeeklyScanConfig(
+            regions=overlapping,
+            train_start=CONFIG.train_start,
+            val_start=CONFIG.val_start,
+            test_start=CONFIG.test_start,
         )

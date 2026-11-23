@@ -35,3 +35,11 @@ def test_missing_column_rejected(tmp_path: Path) -> None:
     bad.write_text("time,latitude\n2026-01-01T00:00:00Z,1.0\n")
     with pytest.raises(SchemaError, match="missing columns"):
         ComCatReader().read([bad])
+
+
+def test_truncated_file_rejected(tmp_path: Path) -> None:
+    lines = FIXTURE.read_text().splitlines()
+    bad = tmp_path / "big.csv"
+    bad.write_text("\n".join([lines[0]] + [lines[1]] * ComCatReader.TRUNCATION_ROWS) + "\n")
+    with pytest.raises(SchemaError, match="service limit"):
+        ComCatReader().read([bad])

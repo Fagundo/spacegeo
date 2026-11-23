@@ -13,7 +13,8 @@ not a test of the project's primary hypothesis.
 ## Setup
 
 - Data: USGS ComCat, `eventtype=earthquake`, M>=4.5 (`configs/ring_of_fire_scan.yaml`).
-- Regions: 17 lat/lon boxes along the Pacific Ring of Fire (may overlap).
+- Regions: 17 regions along the Pacific Ring of Fire, each one or more
+  lat/lon boxes; no two regions overlap (v2; v1 boxes overlapped).
 - Windows: Monday 00:00 UTC to the next Monday.
 - Tests per region-week:
   - `activity`: Mc-cut catalog vs. the empirical distribution of the ~1040
@@ -92,6 +93,19 @@ before re-running.
   validation region-weeks): a few huge sequences inflate the variance and
   the fitted shape puts too little mass at typical counts. Replaced with the
   empirical distribution. No real validation data had been scored.
+
+## Version 2 (2026-11-23, after the first real-data run)
+
+Changed, and why:
+
+- **Regions made disjoint.** In v1, the Central America and Northern Andes boxes overlapped,
+  as did Mexico/Central America, Japan/Kamchatka-Kurils, Taiwan-Philippines/Indonesia and
+  Vanuatu-Fiji/Tonga-Kermadec. The Oct 2026 M7.7 sequence was flagged twice. Regions may
+  now be several boxes, and the config refuses overlaps. This was motivated by double
+  counting, not by which regions flagged.
+
+The calibration criterion, tests, split and selection rule are unchanged. Validation is
+re-run in full for v2; v1 results remain in git history (commit 04ad65f).
 
 ## Known limitations
 

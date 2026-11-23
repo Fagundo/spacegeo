@@ -47,7 +47,21 @@ class WeeklyScanConfig(BaseConfig):
             raise ValueError("Need train_start < val_start < test_start.")
         if self.gap_days < self.horizon_days:
             raise ValueError("gap_days must be at least horizon_days.")
+        self._check_disjoint()
         return self
+
+    def _check_disjoint(self) -> None:
+        names = [r.name for r in self.regions]
+        if len(set(names)) != len(names):
+            raise ValueError("Region names must be unique.")
+        clashes = [
+            f"{a.name}/{b.name}"
+            for i, a in enumerate(self.regions)
+            for b in self.regions[i + 1 :]
+            if a.geo.intersects(b.geo)
+        ]
+        if clashes:
+            raise ValueError(f"Regions overlap: {', '.join(clashes)}.")
 
     @property
     def train(self) -> TimeWindow:

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from spacegeo.common.geo import GeoBox
+from spacegeo.common.geo import GeoBox, GeoRegion, boxes_intersect
 from spacegeo.common.stats import benjamini_hochberg, block_bootstrap_ci
 from spacegeo.common.time import TimeWindow, to_utc
 
@@ -64,3 +64,12 @@ def test_block_bootstrap_covers_mean_and_widens_with_autocorrelation() -> None:
     assert (whi - wlo) > 2 * (hi - lo)
     with pytest.raises(ValueError, match="block"):
         block_bootstrap_ci([1.0, 2.0], block_length=13)
+
+
+def test_region_union_and_intersections() -> None:
+    ell = GeoRegion((GeoBox(-6, 6, -82, -66), GeoBox(6, 12, -77, -66)))
+    assert ell.contains([0, 8, 8], [-80, -70, -80]).tolist() == [True, True, False]
+    assert not boxes_intersect(GeoBox(0, 10, 0, 10), GeoBox(10, 20, 0, 10))  # shared edge
+    assert boxes_intersect(GeoBox(0, 10, 170, -170), GeoBox(5, 6, -175, -172))  # across 180
+    assert not boxes_intersect(GeoBox(0, 10, 170, 180), GeoBox(0, 10, -180, -170))
+    assert ell.intersects(GeoRegion((GeoBox(8, 9, -70, -60),)))

@@ -145,7 +145,8 @@ class ScanReportWriter:
         return [f"Validation verdict: {verdicts}. See `../validation/by_test.csv`."]
 
     def _md_table(self, table: pd.DataFrame, *, with_week: bool = False) -> str:
-        columns = (["window_start", "test"] if with_week else []) + _TABLE_COLUMNS
+        wanted = (["window_start", "test"] if with_week else []) + _TABLE_COLUMNS
+        columns = [c for c in wanted if c in table.columns]
         frame = table.loc[:, columns].copy()
         if with_week:
             frame["window_start"] = pd.to_datetime(frame["window_start"]).dt.strftime("%Y-%m-%d")

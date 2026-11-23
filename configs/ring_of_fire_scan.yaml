@@ -1,8 +1,9 @@
 # Weekly seismicity anomaly scan along the Pacific Ring of Fire.
 #
-# Boxes are coarse lat/lon rectangles around each subduction / plate-boundary
-# segment. They may overlap; each is tested on its own and all p-values are
-# FDR-corrected together. A box with lon_min > lon_max crosses 180 degrees.
+# Each region is one or more lat/lon boxes around a subduction / plate-boundary
+# segment. Regions must not overlap (checked when the config loads); boxes
+# share edges, and each box is half-open on its north and east edges. A box
+# with lon_min > lon_max crosses 180 degrees.
 #
 # Split (see docs/experiments/anomaly-scan.md):
 #   train 2000-2019  -> fit each region's weekly count model
@@ -18,20 +19,56 @@ horizon_days: 7
 fdr: 0.05
 week_anchor: W-MON  # weeks run Monday 00:00 UTC to Monday 00:00 UTC
 regions:
-  - {name: alaska_aleutians,    lat_min_deg: 50,  lat_max_deg: 65,  lon_min_deg: 165,  lon_max_deg: -135}
-  - {name: cascadia,            lat_min_deg: 39,  lat_max_deg: 52,  lon_min_deg: -132, lon_max_deg: -119}
-  - {name: california_baja,     lat_min_deg: 30,  lat_max_deg: 39,  lon_min_deg: -126, lon_max_deg: -114}
-  - {name: mexico,              lat_min_deg: 13,  lat_max_deg: 30,  lon_min_deg: -118, lon_max_deg: -92}
-  - {name: central_america,     lat_min_deg: 6,   lat_max_deg: 16,  lon_min_deg: -93,  lon_max_deg: -77}
-  - {name: northern_andes,      lat_min_deg: -6,  lat_max_deg: 12,  lon_min_deg: -82,  lon_max_deg: -66}
-  - {name: peru,                lat_min_deg: -19, lat_max_deg: -6,  lon_min_deg: -82,  lon_max_deg: -68}
-  - {name: chile,               lat_min_deg: -46, lat_max_deg: -19, lon_min_deg: -78,  lon_max_deg: -64}
-  - {name: kamchatka_kurils,    lat_min_deg: 40,  lat_max_deg: 62,  lon_min_deg: 140,  lon_max_deg: 165}
-  - {name: japan,               lat_min_deg: 30,  lat_max_deg: 46,  lon_min_deg: 128,  lon_max_deg: 147}
-  - {name: izu_bonin_marianas,  lat_min_deg: 10,  lat_max_deg: 30,  lon_min_deg: 136,  lon_max_deg: 149}
-  - {name: taiwan_philippines,  lat_min_deg: 4,   lat_max_deg: 26,  lon_min_deg: 116,  lon_max_deg: 128}
-  - {name: indonesia,           lat_min_deg: -11, lat_max_deg: 6,   lon_min_deg: 94,   lon_max_deg: 135}
-  - {name: png_solomons,        lat_min_deg: -12, lat_max_deg: 0,   lon_min_deg: 135,  lon_max_deg: 165}
-  - {name: vanuatu_fiji,        lat_min_deg: -24, lat_max_deg: -10, lon_min_deg: 165,  lon_max_deg: -175}
-  - {name: tonga_kermadec,      lat_min_deg: -38, lat_max_deg: -14, lon_min_deg: -180, lon_max_deg: -170}
-  - {name: new_zealand,         lat_min_deg: -48, lat_max_deg: -34, lon_min_deg: 165,  lon_max_deg: 180}
+  - name: alaska_aleutians
+    boxes:
+      - {lat_min_deg: 50, lat_max_deg: 65, lon_min_deg: 165, lon_max_deg: -135}
+  - name: cascadia
+    boxes:
+      - {lat_min_deg: 39, lat_max_deg: 52, lon_min_deg: -132, lon_max_deg: -119}
+  - name: california_baja
+    boxes:
+      - {lat_min_deg: 30, lat_max_deg: 39, lon_min_deg: -126, lon_max_deg: -114}
+  - name: mexico
+    boxes:
+      - {lat_min_deg: 13, lat_max_deg: 30, lon_min_deg: -118, lon_max_deg: -92}
+  - name: central_america
+    boxes:
+      - {lat_min_deg: 6, lat_max_deg: 16, lon_min_deg: -92, lon_max_deg: -77}
+  - name: northern_andes
+    boxes:
+      - {lat_min_deg: -6, lat_max_deg: 6, lon_min_deg: -82, lon_max_deg: -66}
+      - {lat_min_deg: 6, lat_max_deg: 12, lon_min_deg: -77, lon_max_deg: -66}
+  - name: peru
+    boxes:
+      - {lat_min_deg: -19, lat_max_deg: -6, lon_min_deg: -82, lon_max_deg: -68}
+  - name: chile
+    boxes:
+      - {lat_min_deg: -46, lat_max_deg: -19, lon_min_deg: -78, lon_max_deg: -64}
+  - name: kamchatka_kurils
+    boxes:
+      - {lat_min_deg: 46, lat_max_deg: 62, lon_min_deg: 140, lon_max_deg: 165}
+      - {lat_min_deg: 40, lat_max_deg: 46, lon_min_deg: 147, lon_max_deg: 165}
+  - name: japan
+    boxes:
+      - {lat_min_deg: 30, lat_max_deg: 46, lon_min_deg: 128, lon_max_deg: 147}
+  - name: izu_bonin_marianas
+    boxes:
+      - {lat_min_deg: 10, lat_max_deg: 30, lon_min_deg: 136, lon_max_deg: 149}
+  - name: taiwan_philippines
+    boxes:
+      - {lat_min_deg: 5, lat_max_deg: 26, lon_min_deg: 116, lon_max_deg: 128}
+  - name: indonesia
+    boxes:
+      - {lat_min_deg: -11, lat_max_deg: 5, lon_min_deg: 94, lon_max_deg: 135}
+  - name: png_solomons
+    boxes:
+      - {lat_min_deg: -12, lat_max_deg: 0, lon_min_deg: 135, lon_max_deg: 165}
+  - name: vanuatu_fiji
+    boxes:
+      - {lat_min_deg: -24, lat_max_deg: -10, lon_min_deg: 165, lon_max_deg: 178}
+  - name: tonga_kermadec
+    boxes:
+      - {lat_min_deg: -37, lat_max_deg: -14, lon_min_deg: 178, lon_max_deg: -170}
+  - name: new_zealand
+    boxes:
+      - {lat_min_deg: -48, lat_max_deg: -37, lon_min_deg: 165, lon_max_deg: 180}

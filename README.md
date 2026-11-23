@@ -18,8 +18,9 @@ uv run pytest
 Latest results: [`results/anomaly/test/latest.md`](results/anomaly/test/latest.md)
 (updated every Monday by the `Weekly anomaly scan` workflow).
 
-For each region in `configs/ring_of_fire_scan.yaml`, each week's M>=4.5 count
-is compared with that region's own history, two ways:
+For each region in `configs/ring_of_fire_scan.yaml` (17 non-overlapping
+regions), each week's M>=4.5 count is compared with that region's own
+history, two ways:
 
 - `activity`: raw catalog vs. the distribution of that region's past weekly
   counts (aftershock bursts included as they actually occurred).

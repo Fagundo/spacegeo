@@ -5,8 +5,10 @@ and writes to ``results/anomaly/``:
 
 * ``validate``: fit on train (2000-2019), score every validation week
   (2020-2025): calibration (tail rates, PIT), log-score model comparison
-  with block-bootstrap intervals, and injection detection power. Skipped if already done unless
-  ``--force``; the result does not change once validation data settle.
+  with block-bootstrap intervals, and injection detection power. Re-run
+  automatically when the config differs from the one stored with the
+  last validation (``results/anomaly/validation/config.yaml``); otherwise
+  skipped unless ``--force``.
 * ``predict``: refit on train + validation, score every complete test week
   (2026 onward) up to ``--as-of`` and write ``test/latest.md``.
 
@@ -20,6 +22,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import tempfile
 from pathlib import Path
 
 import pandas as pd
@@ -46,12 +49,14 @@ class ScanCommand:
         self._writer = ScanReportWriter(project.results / "anomaly")
 
     def validate(self, *, force: bool) -> None:
-        """Run and store the validation span."""
-        if (self._writer.validation_dir / "by_test.csv").exists() and not force:
-            _log.info("Validation already stored; use --force to redo it.")
+        """Run and store the validation span (again if the config changed)."""
+        stored = self._writer.validation_dir / "config.yaml"
+        if stored.exists() and not force and self._same_config(stored):
+            _log.info("Validation already stored for this config; use --force to redo it.")
             return
         report = ValidationSuite(self._config, self._scan).run()
         self._writer.write_validation(report)
+        self._config.to_yaml(stored)
         _log.info("Validation summary:\n%s", report.by_test.round(4).to_string())
         _log.info("Model comparison:\n%s", report.model_comparison.round(4).to_string())
 
@@ -62,6 +67,12 @@ class ScanCommand:
         calibration = pd.read_csv(by_test_path, index_col="test") if by_test_path.exists() else None
         self._writer.write_predictions(results, calibration)
         _log.info("Wrote %s", self._writer.test_dir / "latest.md")
+
+    def _same_config(self, stored: Path) -> bool:
+        with tempfile.TemporaryDirectory() as tmp:
+            current = Path(tmp) / "config.yaml"
+            self._config.to_yaml(current)
+            return current.read_bytes() == stored.read_bytes()
 
 
 def _parse_args() -> argparse.Namespace:

@@ -132,3 +132,52 @@ class GeoBox:
             else (east_of_min & west_of_max)
         )
         return np.asarray(in_lat & in_lon, dtype=bool)
+
+
+def _lon_intervals(box: GeoBox) -> list[tuple[float, float]]:
+    if box.crosses_antimeridian:
+        return [(box.lon_min_deg, 180.0), (-180.0, box.lon_max_deg)]
+    return [(box.lon_min_deg, box.lon_max_deg)]
+
+
+def boxes_intersect(a: GeoBox, b: GeoBox) -> bool:
+    """Whether two half-open boxes share any area (touching edges do not count).
+
+    Args:
+        a: First box.
+        b: Second box.
+
+    Returns:
+        True if some point lies inside both.
+    """
+    if not (a.lat_min_deg < b.lat_max_deg and b.lat_min_deg < a.lat_max_deg):
+        return False
+    return any(
+        lo_a < hi_b and lo_b < hi_a
+        for lo_a, hi_a in _lon_intervals(a)
+        for lo_b, hi_b in _lon_intervals(b)
+    )
+
+
+@dataclass(frozen=True)
+class GeoRegion:
+    """A union of :class:`GeoBox` pieces (e.g. an L-shaped plate boundary).
+
+    Attributes:
+        boxes: The pieces; they may share edges but should not overlap.
+    """
+
+    boxes: tuple[GeoBox, ...]
+
+    def __post_init__(self) -> None:
+        if not self.boxes:
+            raise ValueError("A region needs at least one box.")
+
+    def contains(self, lat_deg: npt.ArrayLike, lon_deg: npt.ArrayLike) -> npt.NDArray[np.bool_]:
+        """Vectorized membership test (inside any piece)."""
+        masks = [box.contains(lat_deg, lon_deg) for box in self.boxes]
+        return np.asarray(np.logical_or.reduce(masks), dtype=bool)
+
+    def intersects(self, other: GeoRegion) -> bool:
+        """Whether this region shares any area with ``other``."""
+        return any(boxes_intersect(a, b) for a in self.boxes for b in other.boxes)
