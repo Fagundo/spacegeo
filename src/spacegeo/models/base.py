@@ -13,6 +13,7 @@ Two small interfaces instead of one large one (interface segregation):
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Self
 
@@ -75,6 +76,15 @@ class ForecastModel(FittableMixin, ABC):
         """Log-likelihood of the events in ``data.window`` under the fitted model."""
         self._require_fitted()
         return self._log_likelihood(data)
+
+    def log_likelihood_by_window(
+        self, data: ModelData, windows: Sequence[TimeWindow]
+    ) -> npt.NDArray[np.float64]:
+        """Log-likelihood of each window's events, history included.
+
+        Subclasses may override this with a faster equivalent.
+        """
+        return np.array([self.log_likelihood(data.restrict(w)) for w in windows])
 
     @abstractmethod
     def _fit(self, data: ModelData) -> None:

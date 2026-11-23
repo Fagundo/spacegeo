@@ -10,7 +10,11 @@ dependencies = [
     "pydantic>=2.7",
     "pyyaml>=6.0",
     "matplotlib>=3.8",
+    "scipy>=1.12",
 ]
+
+[project.scripts]
+spacegeo = "spacegeo.cli:Cli.main"
 
 [build-system]
 requires = ["hatchling"]

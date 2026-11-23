@@ -1,8 +1,14 @@
 import numpy as np
 import pytest
 
-from spacegeo.common.geo import GeoBox, GeoRegion, boxes_intersect
-from spacegeo.common.stats import benjamini_hochberg, block_bootstrap_ci
+from spacegeo.common.geo import (
+    GeoBox,
+    GeoRegion,
+    boxes_intersect,
+    destination_point,
+    haversine_km,
+)
+from spacegeo.common.stats import benjamini_hochberg, block_bootstrap_ci, holm
 from spacegeo.common.time import TimeWindow, to_utc
 
 
@@ -73,3 +79,21 @@ def test_region_union_and_intersections() -> None:
     assert boxes_intersect(GeoBox(0, 10, 170, -170), GeoBox(5, 6, -175, -172))  # across 180
     assert not boxes_intersect(GeoBox(0, 10, 170, 180), GeoBox(0, 10, -180, -170))
     assert ell.intersects(GeoRegion((GeoBox(8, 9, -70, -60),)))
+
+
+def test_destination_area_sampling_and_exits() -> None:
+    lat, lon = destination_point(10.0, 179.5, np.pi / 2, 200.0)
+    assert haversine_km(10.0, 179.5, lat, lon) == pytest.approx(200.0, rel=1e-9)
+    assert -179.0 < lon < -178.0  # wrapped across 180
+    box = GeoBox(0, 10, 0, 10)
+    assert box.area_km2 == pytest.approx(1.2302e6, rel=1e-3)
+    region = GeoRegion((box, GeoBox(10, 20, 0, 10)))
+    la, lo = region.sample(500, np.random.default_rng(0))
+    assert region.contains(la, lo).all()
+    exits = region.exit_distances_km([5.0], [5.0], np.radians([0.0, 90.0]), 3000.0, step_km=2.0)
+    assert exits[0, 0] == pytest.approx(15 * 111.19, abs=3)  # north through both boxes
+    assert exits[0, 1] == pytest.approx(5 * 111.19 * np.cos(np.radians(5)), abs=3)
+
+
+def test_holm_matches_hand_calculation() -> None:
+    np.testing.assert_allclose(holm([0.01, 0.04, 0.03, 0.5]), [0.04, 0.09, 0.09, 0.5])

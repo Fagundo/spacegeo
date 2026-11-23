@@ -47,6 +47,36 @@ def haversine_km(
     return 2 * EARTH_RADIUS_KM * np.arcsin(np.sqrt(np.clip(a, 0.0, 1.0)))
 
 
+def destination_point(
+    lat_deg: npt.ArrayLike,
+    lon_deg: npt.ArrayLike,
+    bearing_rad: npt.ArrayLike,
+    distance_km: npt.ArrayLike,
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    """Point reached by travelling a great-circle distance on a bearing.
+
+    Args:
+        lat_deg: Start latitude(s), degrees.
+        lon_deg: Start longitude(s), degrees.
+        bearing_rad: Initial bearing(s), radians clockwise from north.
+        distance_km: Distance(s), km.
+
+    Returns:
+        ``(lat_deg, lon_deg)`` arrays broadcast over the inputs; longitude
+        normalized to [-180, 180).
+    """
+    lat1 = np.radians(np.asarray(lat_deg, dtype=np.float64))
+    lon1 = np.radians(np.asarray(lon_deg, dtype=np.float64))
+    theta = np.asarray(bearing_rad, dtype=np.float64)
+    delta = np.asarray(distance_km, dtype=np.float64) / EARTH_RADIUS_KM
+    sin_lat2 = np.sin(lat1) * np.cos(delta) + np.cos(lat1) * np.sin(delta) * np.cos(theta)
+    lat2 = np.arcsin(np.clip(sin_lat2, -1.0, 1.0))
+    lon2 = lon1 + np.arctan2(
+        np.sin(theta) * np.sin(delta) * np.cos(lat1), np.cos(delta) - np.sin(lat1) * sin_lat2
+    )
+    return np.degrees(lat2), normalize_longitude(np.degrees(lon2))
+
+
 @dataclass(frozen=True)
 class GeoPoint:
     """A point on the Earth's surface.
@@ -105,6 +135,24 @@ class GeoBox:
             )
         if self.lon_min_deg == self.lon_max_deg:
             raise ValueError("Longitude edges must differ.")
+
+    @property
+    def lon_span_deg(self) -> float:
+        """Width in longitude, degrees (handles the antimeridian)."""
+        return (self.lon_max_deg - self.lon_min_deg) % 360.0 or 360.0
+
+    @property
+    def area_km2(self) -> float:
+        """Area on the sphere, km^2."""
+        sin_band = np.sin(np.radians(self.lat_max_deg)) - np.sin(np.radians(self.lat_min_deg))
+        return float(EARTH_RADIUS_KM**2 * np.radians(self.lon_span_deg) * sin_band)
+
+    def sample(self, n: int, rng: np.random.Generator) -> tuple[npt.NDArray[np.float64], ...]:
+        """``n`` points uniform over the box's area on the sphere: ``(lat, lon)``."""
+        sin_lo, sin_hi = np.sin(np.radians([self.lat_min_deg, self.lat_max_deg]))
+        lat = np.degrees(np.arcsin(rng.uniform(sin_lo, sin_hi, n)))
+        lon = normalize_longitude(self.lon_min_deg + rng.uniform(0.0, self.lon_span_deg, n))
+        return lat, lon
 
     @property
     def crosses_antimeridian(self) -> bool:
@@ -181,3 +229,65 @@ class GeoRegion:
     def intersects(self, other: GeoRegion) -> bool:
         """Whether this region shares any area with ``other``."""
         return any(boxes_intersect(a, b) for a in self.boxes for b in other.boxes)
+
+    @property
+    def area_km2(self) -> float:
+        """Total area, km^2 (pieces are assumed not to overlap)."""
+        return sum(box.area_km2 for box in self.boxes)
+
+    def sample(self, n: int, rng: np.random.Generator) -> tuple[npt.NDArray[np.float64], ...]:
+        """``n`` points uniform over the region's area: ``(lat, lon)``."""
+        areas = np.array([box.area_km2 for box in self.boxes])
+        counts = rng.multinomial(n, areas / areas.sum())
+        pieces = [box.sample(int(k), rng) for box, k in zip(self.boxes, counts, strict=True)]
+        return np.concatenate([p[0] for p in pieces]), np.concatenate([p[1] for p in pieces])
+
+    def exit_distances_km(
+        self,
+        lat_deg: npt.ArrayLike,
+        lon_deg: npt.ArrayLike,
+        bearings_rad: npt.ArrayLike,
+        max_km: float,
+        step_km: float = 5.0,
+    ) -> npt.NDArray[np.float64]:
+        """Distance along each bearing at which a point first leaves the region.
+
+        Found by marching outward in ``step_km`` steps (accuracy about half a
+        step) and capped at ``max_km``.
+
+        Args:
+            lat_deg: Start latitudes, shape ``(n,)``.
+            lon_deg: Start longitudes, shape ``(n,)``.
+            bearings_rad: Bearings, shape ``(k,)``.
+            max_km: Cap, km.
+            step_km: March step, km.
+
+        Returns:
+            Array of shape ``(n, k)``, km.
+        """
+        lat = np.asarray(lat_deg, dtype=np.float64)
+        lon = np.asarray(lon_deg, dtype=np.float64)
+        theta = np.asarray(bearings_rad, dtype=np.float64)
+        radii = np.arange(step_km, max_km + step_km, step_km)
+        chunk = 512
+        parts = [
+            self._exit_chunk(lat[i : i + chunk], lon[i : i + chunk], theta, radii, step_km)
+            for i in range(0, lat.size, chunk)
+        ]
+        out = np.concatenate(parts) if parts else np.empty((0, theta.size))
+        return np.minimum(out, max_km)
+
+    def _exit_chunk(
+        self,
+        lat: npt.NDArray[np.float64],
+        lon: npt.NDArray[np.float64],
+        theta: npt.NDArray[np.float64],
+        radii: npt.NDArray[np.float64],
+        step_km: float,
+    ) -> npt.NDArray[np.float64]:
+        lat2, lon2 = destination_point(
+            lat[:, None, None], lon[:, None, None], theta[None, :, None], radii[None, None, :]
+        )
+        outside = ~self.contains(lat2, lon2)
+        first = np.where(outside.any(axis=2), outside.argmax(axis=2), radii.size)
+        return np.where(first < radii.size, (first + 0.5) * step_km, np.inf)
