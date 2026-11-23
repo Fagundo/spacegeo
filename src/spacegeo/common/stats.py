@@ -35,6 +35,35 @@ def benjamini_hochberg(p_values: npt.ArrayLike) -> npt.NDArray[np.float64]:
     return adjusted
 
 
+def block_bootstrap_indices(
+    n: int, block_length: int, n_resamples: int = 2000, seed: int = 0
+) -> npt.NDArray[np.int64]:
+    """Moving-block bootstrap resamples of ``range(n)``.
+
+    Overlapping blocks of consecutive positions are drawn with replacement
+    and concatenated, so autocorrelation shorter than ``block_length`` is
+    preserved within each resample.
+
+    Args:
+        n: Series length.
+        block_length: Block size in samples.
+        n_resamples: Number of resamples.
+        seed: RNG seed.
+
+    Returns:
+        Integer array of shape ``(n_resamples, n)``.
+
+    Raises:
+        ValueError: If the series is shorter than one block.
+    """
+    if n < block_length or block_length < 1:
+        raise ValueError(f"Need at least one block of {block_length} values, got {n}.")
+    rng = np.random.default_rng(seed)
+    n_blocks = -(-n // block_length)
+    starts = rng.integers(0, n - block_length + 1, size=(n_resamples, n_blocks))
+    return (starts[..., None] + np.arange(block_length)).reshape(n_resamples, -1)[:, :n]
+
+
 def block_bootstrap_ci(
     values: npt.ArrayLike,
     block_length: int,
@@ -43,9 +72,6 @@ def block_bootstrap_ci(
     seed: int = 0,
 ) -> tuple[float, float]:
     """Moving-block bootstrap confidence interval for the mean of a series.
-
-    Resamples overlapping blocks of consecutive values so that
-    autocorrelation shorter than ``block_length`` is preserved.
 
     Args:
         values: Time-ordered 1-D series (e.g. one value per week).
@@ -62,15 +88,37 @@ def block_bootstrap_ci(
         ValueError: If the series is shorter than one block or has NaNs.
     """
     x = np.asarray(values, dtype=np.float64).ravel()
-    if x.size < block_length or block_length < 1:
-        raise ValueError(f"Need at least one block of {block_length} values, got {x.size}.")
     if not np.isfinite(x).all():
         raise ValueError("block_bootstrap_ci needs finite values.")
-    rng = np.random.default_rng(seed)
-    n_blocks = -(-x.size // block_length)
-    starts = rng.integers(0, x.size - block_length + 1, size=(n_resamples, n_blocks))
-    idx = (starts[..., None] + np.arange(block_length)).reshape(n_resamples, -1)[:, : x.size]
-    means = x[idx].mean(axis=1)
+    idx = block_bootstrap_indices(x.size, block_length, n_resamples, seed)
+    return percentile_interval(x[idx].mean(axis=1), confidence)
+
+
+def percentile_interval(samples: npt.ArrayLike, confidence: float = 0.95) -> tuple[float, float]:
+    """Two-sided percentile interval of bootstrap ``samples``."""
     tail = (1 - confidence) / 2 * 100
-    low, high = np.percentile(means, [tail, 100 - tail])
+    low, high = np.percentile(np.asarray(samples, dtype=np.float64), [tail, 100 - tail])
     return float(low), float(high)
+
+
+def holm(p_values: npt.ArrayLike) -> npt.NDArray[np.float64]:
+    """Holm-Bonferroni adjusted p-values (family-wise error control).
+
+    Args:
+        p_values: Raw p-values in [0, 1], any shape (flattened internally).
+
+    Returns:
+        Adjusted p-values in the input order.
+
+    Raises:
+        ValueError: If any p-value is NaN or outside [0, 1].
+    """
+    p = np.asarray(p_values, dtype=np.float64).ravel()
+    if np.isnan(p).any() or (p < 0).any() or (p > 1).any():
+        raise ValueError("p-values must be in [0, 1] and not NaN.")
+    n = p.size
+    order = np.argsort(p)
+    scaled = np.maximum.accumulate(p[order] * (n - np.arange(n)))
+    adjusted = np.empty(n)
+    adjusted[order] = np.clip(scaled, 0.0, 1.0)
+    return adjusted

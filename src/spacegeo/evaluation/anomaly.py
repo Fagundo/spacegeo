@@ -10,15 +10,18 @@ look-elsewhere effect of scanning many places at once.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
 from types import MappingProxyType
 from typing import Self
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pydantic import Field
+import yaml
+from pydantic import Field, ValidationError
 
 from spacegeo.common.config import BaseConfig
+from spacegeo.common.exceptions import ConfigError
 from spacegeo.common.fitting import FittableMixin
 from spacegeo.common.geo import GeoBox, GeoRegion
 from spacegeo.common.stats import benjamini_hochberg
@@ -73,6 +76,32 @@ class RegionConfig(BaseConfig):
     def geo(self) -> GeoRegion:
         """The region as a :class:`GeoRegion`."""
         return GeoRegion(tuple(b.box for b in self.boxes))
+
+    @classmethod
+    def load_all(cls, path: Path) -> tuple[RegionConfig, ...]:
+        """The ``regions:`` list of a YAML config, validated and checked disjoint."""
+        try:
+            raw = yaml.safe_load(path.read_text()) or {}
+            regions = tuple(cls.model_validate(r) for r in raw["regions"])
+        except (OSError, KeyError, TypeError, yaml.YAMLError, ValidationError) as exc:
+            raise ConfigError(f"No valid regions list in {path}: {exc}") from exc
+        cls.check_disjoint(regions)
+        return regions
+
+    @staticmethod
+    def check_disjoint(regions: Sequence[RegionConfig]) -> None:
+        """Raise ``ValueError`` if names repeat or any two regions overlap."""
+        names = [r.name for r in regions]
+        if len(set(names)) != len(names):
+            raise ValueError("Region names must be unique.")
+        clashes = [
+            f"{a.name}/{b.name}"
+            for i, a in enumerate(regions)
+            for b in regions[i + 1 :]
+            if a.geo.intersects(b.geo)
+        ]
+        if clashes:
+            raise ValueError(f"Regions overlap: {', '.join(clashes)}.")
 
 
 class _RegionEvents:

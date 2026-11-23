@@ -1,0 +1,14 @@
+{
+  "criterion_met": true,
+  "pooled": {
+    "info_gain_hi": 2.198916548909527,
+    "info_gain_lo": 1.3934360764766505,
+    "info_gain_per_event": 1.7617778910734583,
+    "max_branching_ratio": 37.02473222022164,
+    "n_events": 31841.0,
+    "n_regions": 17.0,
+    "n_weeks": 312.0,
+    "regions_gain_ci_above_0": 17.0,
+    "regions_ks_reject_holm_0.05": 6.0
+  }
+}

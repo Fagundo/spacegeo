@@ -51,17 +51,7 @@ class WeeklyScanConfig(BaseConfig):
         return self
 
     def _check_disjoint(self) -> None:
-        names = [r.name for r in self.regions]
-        if len(set(names)) != len(names):
-            raise ValueError("Region names must be unique.")
-        clashes = [
-            f"{a.name}/{b.name}"
-            for i, a in enumerate(self.regions)
-            for b in self.regions[i + 1 :]
-            if a.geo.intersects(b.geo)
-        ]
-        if clashes:
-            raise ValueError(f"Regions overlap: {', '.join(clashes)}.")
+        RegionConfig.check_disjoint(self.regions)
 
     @property
     def train(self) -> TimeWindow:

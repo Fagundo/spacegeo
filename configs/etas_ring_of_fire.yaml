@@ -1,0 +1,51 @@
+# ETAS baseline for the Pacific Ring of Fire.
+# Run: uv run spacegeo run configs/etas_ring_of_fire.yaml
+#
+# Pre-registered 2026-11-23, before the full run. Disclosure: while checking
+# run time, the fitted model was scored on the validation span for two
+# regions (new_zealand, tonga_kermadec); both showed positive information
+# gain. Nothing below was changed after seeing those two numbers.
+prereg:
+  hypothesis: >-
+    A space-time ETAS model fitted on 2000-2019 forecasts 2020-2025 M>=4.5
+    seismicity in each Ring of Fire region better than a time-independent
+    smoothed-seismicity Poisson model fitted on the same span.
+  comparison: >-
+    SmoothedPoissonModel (constant rate x variable-bandwidth kernel density of
+    all 2000-2019 events), per region.
+  metric: >-
+    Information gain per event = (log L_ETAS - log L_Poisson) / N over the
+    validation span, both conditioned on all earlier events; magnitude terms
+    excluded (identical in both models). 95% interval from a moving-block
+    bootstrap over weeks (13-week blocks), resampling the same weeks in every
+    region.
+  success: >-
+    Primary: pooled information gain over all 17 regions > 0 with the 95%
+    interval excluding 0. Secondary (reported, Holm-corrected across 17
+    regions): per-region gain > 0; time-rescaling residuals consistent with a
+    unit Poisson process (KS test on transformed inter-event times); every
+    fitted branching ratio < 1.
+  data: >-
+    USGS ComCat M>=4.5 (data/catalog/comcat_M4.5), regions from
+    configs/ring_of_fire_scan.yaml (17 disjoint regions), m0 = Mc = 4.5,
+    no declustering (ETAS models clustering), first 365 days of training used
+    only as history, triggering truncated at 365 days and 300 km. Validation
+    windows: Monday weeks from 2020-01-06; test span (2026+) not touched.
+  variants: 1
+experiment: etas_baseline
+regions_file: configs/ring_of_fire_scan.yaml
+catalog: data/catalog/comcat_M4.5
+mc: 4.5
+train_start: "2000-01-01T00:00:00Z"
+val_start: "2020-01-01T00:00:00Z"
+val_end: "2026-01-01T00:00:00Z"
+week_anchor: W-MON
+bootstrap_block_weeks: 13
+bootstrap_resamples: 2000
+seed: 0
+etas:
+  t_max_days: 365
+  r_max_km: 300
+  burn_in_days: 365
+  iterations: 5
+  tolerance: 0.02
