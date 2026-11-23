@@ -37,7 +37,7 @@ def test_window_excludes_forecast_time() -> None:
 def test_min_observations_yields_nan() -> None:
     feature = _Count(lookback=duration(hours=3), min_observations=2)
     out = feature.compute(DATA, pd.DatetimeIndex([INDEX[1]]))
-    assert np.isnan(out.iloc[0, 0])
+    assert out.iloc[:, 0].isna().all()
 
 
 def test_rejects_unsorted_data() -> None:

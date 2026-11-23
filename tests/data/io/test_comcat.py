@@ -20,7 +20,7 @@ def test_parses_sorted_utc_catalog() -> None:
 def test_longitude_180_wraps_and_missing_mag_is_nan() -> None:
     df = ComCatReader().read([FIXTURE]).set_index("event_id")
     assert df.loc["us7000a003", "lon_deg"] == -180.0
-    assert pd.isna(df.loc["us7000a003", "mag"])
+    assert df.loc[["us7000a003"], "mag"].isna().all()
 
 
 def test_bad_latitude_rejected(tmp_path: Path) -> None:
