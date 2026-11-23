@@ -66,7 +66,8 @@ def test_experiment_runs_scores_and_reports(catalog: pd.DataFrame, tmp_path: Pat
     assert np.isfinite(scores["mean_log_score"]).all()
     assert scores.loc[("y_primary", REFERENCE), f"gain_vs_{REFERENCE}"] == pytest.approx(0.0)
     # ETAS carries real information on a clustered ETAS-generated catalog.
-    assert scores.loc[("y_primary", REFERENCE), "gain_vs_climatology_lo"] > 0
+    gain_lo = scores.loc[[("y_primary", REFERENCE)], "gain_vs_climatology_lo"].to_numpy()
+    assert gain_lo[0] > 0
     assert (
         result.predictions["week"].min()
         >= _config().weeks(_config().val_start, _config().val_end)[0].start
