@@ -30,6 +30,7 @@ class ValidationReport:
         model_comparison: Log score / information gain per catalog and model.
         power: Detection rate per test, region and injected burst size.
         min_detectable: Smallest burst reaching 80% power per test and region.
+        mc: Magnitude of completeness per region (``region``, ``mc``).
     """
 
     results: pd.DataFrame
@@ -39,6 +40,7 @@ class ValidationReport:
     model_comparison: pd.DataFrame
     power: pd.DataFrame
     min_detectable: pd.DataFrame
+    mc: pd.DataFrame
 
 
 class ValidationSuite:
@@ -87,6 +89,7 @@ class ValidationSuite:
             ),
             power=power,
             min_detectable=self._min_detectable(power),
+            mc=pd.DataFrame({"region": list(self._scan.mc), "mc": list(self._scan.mc.values())}),
         )
 
     def _power(

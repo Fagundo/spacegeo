@@ -16,10 +16,11 @@ from typing import Self
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from pydantic import Field
 
 from spacegeo.common.config import BaseConfig
 from spacegeo.common.fitting import FittableMixin
-from spacegeo.common.geo import GeoBox
+from spacegeo.common.geo import GeoBox, GeoRegion
 from spacegeo.common.stats import benjamini_hochberg
 from spacegeo.common.time import TimeWindow, require_utc_index
 from spacegeo.models.base import CountModel, ModelData
@@ -43,10 +44,9 @@ probability integral transform, uniform on [0, 1] if the forecast is
 calibrated."""
 
 
-class RegionConfig(BaseConfig):
-    """A named lat/lon box; see :class:`~spacegeo.common.geo.GeoBox`."""
+class BoxConfig(BaseConfig):
+    """One lat/lon box; see :class:`~spacegeo.common.geo.GeoBox`."""
 
-    name: str
     lat_min_deg: float
     lat_max_deg: float
     lon_min_deg: float
@@ -54,15 +54,35 @@ class RegionConfig(BaseConfig):
 
     @property
     def box(self) -> GeoBox:
-        """The region as a :class:`GeoBox`."""
+        """The box as a :class:`GeoBox`."""
         return GeoBox(self.lat_min_deg, self.lat_max_deg, self.lon_min_deg, self.lon_max_deg)
+
+
+class RegionConfig(BaseConfig):
+    """A named region made of one or more boxes.
+
+    Attributes:
+        name: Region name used in outputs.
+        boxes: Pieces of the region (union).
+        mc: Optional fixed magnitude of completeness for this region; when
+            unset, the pipeline estimates it on the training span.
+    """
+
+    name: str
+    boxes: tuple[BoxConfig, ...] = Field(min_length=1)
+    mc: float | None = None
+
+    @property
+    def geo(self) -> GeoRegion:
+        """The region as a :class:`GeoRegion`."""
+        return GeoRegion(tuple(b.box for b in self.boxes))
 
 
 class _RegionEvents:
     """One region's event times (int64 ns, sorted) and magnitudes."""
 
     def __init__(self, region: RegionConfig, events: pd.DataFrame) -> None:
-        local = events.loc[region.box.contains(events["lat_deg"], events["lon_deg"])].sort_index()
+        local = events.loc[region.geo.contains(events["lat_deg"], events["lon_deg"])].sort_index()
         self.frame = local
         self.times_ns = require_utc_index(local.index).as_unit("ns").asi8
         self.mags = local["mag"].to_numpy(dtype=np.float64)

@@ -10,7 +10,7 @@ import pandas as pd
 from spacegeo.common.log import get_logger
 from spacegeo.common.time import TimeWindow, duration, to_utc
 from spacegeo.data.preprocessing.gardner_knopoff import GardnerKnopoffDeclusterer
-from spacegeo.data.preprocessing.magnitude_cut import MagnitudeCut
+from spacegeo.data.preprocessing.regional_completeness import RegionalCompletenessCut
 from spacegeo.evaluation.anomaly import RegionalAnomalyScanner
 from spacegeo.models.base import CountModel
 from spacegeo.models.count import EmpiricalCountModel, PoissonCountModel
@@ -52,7 +52,7 @@ class WeeklyAnomalyScan:
 
     The default tests are:
 
-    * ``activity``: the Mc-cut catalog against the empirical distribution of
+    * ``activity``: the per-region Mc-cut catalog against the empirical distribution of
       historical weekly counts (heavy aftershock tails included as observed).
       A negative binomial was tried first and failed calibration on
       simulated clustered data; see ``docs/experiments/anomaly-scan.md``.
@@ -62,7 +62,9 @@ class WeeklyAnomalyScan:
 
     Args:
         config: Regions, cut and split.
-        catalog: Parsed catalog (``lat_deg``, ``lon_deg``, ``mag``; UTC index).
+        catalog: Parsed catalog (``lat_deg``, ``lon_deg``, ``mag``; UTC index),
+            before any magnitude cut: each region's Mc is fitted on its
+            training span and applied here.
         tests: Override the default tests.
     """
 
@@ -73,17 +75,36 @@ class WeeklyAnomalyScan:
         tests: tuple[ScanTest, ...] | None = None,
     ) -> None:
         self._config = config
-        self._tests = tests or self._default_tests(config, catalog)
+        self._completeness = self.completeness_cut(config, catalog)
+        self._tests = tests or self._default_tests(config, self._completeness.transform(catalog))
 
     @property
     def tests(self) -> tuple[ScanTest, ...]:
         """The tests this scan runs."""
         return self._tests
 
+    @property
+    def mc(self) -> Mapping[str, float]:
+        """Magnitude of completeness per region, fitted on the training span."""
+        return self._completeness.mc
+
     @staticmethod
-    def _default_tests(config: WeeklyScanConfig, catalog: pd.DataFrame) -> tuple[ScanTest, ...]:
+    def completeness_cut(
+        config: WeeklyScanConfig, catalog: pd.DataFrame
+    ) -> RegionalCompletenessCut:
+        """Per-region Mc cut fitted on the training span only."""
+        overrides = {r.name: r.mc for r in config.regions if r.mc is not None}
+        cut = RegionalCompletenessCut(
+            {r.name: r.geo for r in config.regions},
+            floor=config.catalog_min_magnitude,
+            overrides=overrides,
+            settings=config.completeness.settings,
+        )
+        return cut.fit(catalog.loc[config.train.mask(catalog.index)])
+
+    @staticmethod
+    def _default_tests(config: WeeklyScanConfig, cut: pd.DataFrame) -> tuple[ScanTest, ...]:
         horizon = duration(days=config.horizon_days)
-        cut = MagnitudeCut(config.mc).transform(catalog)
         mainshocks = GardnerKnopoffDeclusterer(include_foreshocks=False).transform(cut)
         return (
             ScanTest("activity", cut, lambda: EmpiricalCountModel(horizon)),

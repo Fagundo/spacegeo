@@ -40,8 +40,12 @@ if __name__ == "__main__":
     cfg = WeeklyScanConfig.from_yaml(project.root / args.config)
     as_of = to_utc(args.as_of) if args.as_of else to_utc(pd.Timestamp.now(tz="UTC"))
     updater = CatalogUpdater(
-        scraper=ComCatScraper(project.raw_source("comcat"), min_magnitude=cfg.mc),
+        scraper=ComCatScraper(
+            project.raw_source("comcat"),
+            min_magnitude=cfg.catalog_min_magnitude,
+            chunk=cfg.download_chunk,
+        ),
         reader=ComCatReader(),
-        archive=CatalogArchive(project.catalog_archive("comcat", cfg.mc)),
+        archive=CatalogArchive(project.catalog_archive("comcat", cfg.catalog_min_magnitude)),
     )
     updater.update(first_year=to_utc(cfg.train_start).year, as_of=as_of)

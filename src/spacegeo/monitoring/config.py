@@ -7,7 +7,35 @@ from pydantic import AwareDatetime, Field, model_validator
 
 from spacegeo.common.config import BaseConfig
 from spacegeo.common.time import TimeWindow, duration, to_utc
+from spacegeo.data.preprocessing.regional_completeness import CompletenessSettings
 from spacegeo.evaluation.anomaly import RegionConfig
+
+
+class CompletenessConfig(BaseConfig):
+    """Per-region Mc estimation (see ``RegionalCompletenessCut``).
+
+    Attributes:
+        correction: Added to the maximum-curvature estimate.
+        block_years: Training span is split into blocks this long; the
+            largest block estimate is used.
+        min_events: Fewest events a block needs to give an estimate.
+        fallback: Mc for a region without enough events.
+    """
+
+    correction: float = 0.2
+    block_years: int = Field(default=5, ge=1)
+    min_events: int = Field(default=50, ge=10)
+    fallback: float = 4.5
+
+    @property
+    def settings(self) -> CompletenessSettings:
+        """As the preprocessor's settings object."""
+        return CompletenessSettings(
+            correction=self.correction,
+            block_years=self.block_years,
+            min_events=self.min_events,
+            fallback=self.fallback,
+        )
 
 
 class WeeklyScanConfig(BaseConfig):
@@ -19,7 +47,11 @@ class WeeklyScanConfig(BaseConfig):
 
     Attributes:
         regions: Regions to test (may overlap; each is tested on its own).
-        mc: Magnitude of completeness applied to the catalog.
+        catalog_min_magnitude: Lowest magnitude downloaded and stored; also
+            the lowest Mc any region may get.
+        download_chunk: Pandas frequency for download chunks (``MS`` keeps
+            each query under the service's 20,000-event limit at M2.5).
+        completeness: How each region's Mc is estimated on the training span.
         train_start: Start of the history.
         val_start: End of training, start of validation.
         test_start: End of validation, start of live predictions.
@@ -32,7 +64,9 @@ class WeeklyScanConfig(BaseConfig):
     """
 
     regions: tuple[RegionConfig, ...] = Field(min_length=1)
-    mc: float = 4.5
+    catalog_min_magnitude: float = 2.5
+    download_chunk: str = "MS"
+    completeness: CompletenessConfig = CompletenessConfig()
     train_start: AwareDatetime
     val_start: AwareDatetime
     test_start: AwareDatetime
@@ -47,7 +81,21 @@ class WeeklyScanConfig(BaseConfig):
             raise ValueError("Need train_start < val_start < test_start.")
         if self.gap_days < self.horizon_days:
             raise ValueError("gap_days must be at least horizon_days.")
+        self._check_disjoint()
         return self
+
+    def _check_disjoint(self) -> None:
+        names = [r.name for r in self.regions]
+        if len(set(names)) != len(names):
+            raise ValueError("Region names must be unique.")
+        clashes = [
+            f"{a.name}/{b.name}"
+            for i, a in enumerate(self.regions)
+            for b in self.regions[i + 1 :]
+            if a.geo.intersects(b.geo)
+        ]
+        if clashes:
+            raise ValueError(f"Regions overlap: {', '.join(clashes)}.")
 
     @property
     def train(self) -> TimeWindow:

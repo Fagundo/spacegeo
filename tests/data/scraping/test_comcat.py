@@ -47,3 +47,11 @@ def test_single_chunk_inside_one_year(tmp_path: Path) -> None:
 
 def test_registered() -> None:
     assert SCRAPERS.get("comcat") is ComCatScraper
+
+
+def test_monthly_chunks(tmp_path: Path) -> None:
+    scraper = ComCatScraper(tmp_path, client=_NoNetwork(), min_magnitude=2.5, chunk="MS")
+    plan = scraper.plan(TimeWindow(to_utc("2026-01-01T00:00Z"), to_utc("2026-03-15T00:00Z")))
+    starts = [parse_qs(urlparse(r.url).query)["starttime"][0] for r in plan]
+    assert starts == ["2026-01-01T00:00:00", "2026-02-01T00:00:00", "2026-03-01T00:00:00"]
+    assert all("minmagnitude=2.5" in r.url for r in plan)

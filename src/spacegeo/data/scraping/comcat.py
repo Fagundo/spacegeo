@@ -18,9 +18,9 @@ _ISO = "%Y-%m-%dT%H:%M:%S"
 
 @SCRAPERS.register("comcat")
 class ComCatScraper(Scraper):
-    """Plans yearly CSV queries against the USGS FDSN event service.
+    """Plans chunked CSV queries against the USGS FDSN event service.
 
-    Completed years get a stable file name, so reruns skip them. The last,
+    Completed chunks get a stable file name, so reruns skip them. The last,
     partial chunk is named by its end date, so a later run fetches a fresh
     copy that includes recent events and revisions.
 
@@ -29,6 +29,8 @@ class ComCatScraper(Scraper):
         client: HTTP transport.
         min_magnitude: Lower magnitude bound passed to the service (any
             magnitude type, as reported by ComCat).
+        chunk: Pandas frequency of the query chunks; use ``MS`` (monthly)
+            below about M4, where a year exceeds the per-query limit.
     """
 
     source_name = "comcat"
@@ -37,18 +39,23 @@ class ComCatScraper(Scraper):
     """Service limit; global M>=4.5 runs ~7-9k events per year."""
 
     def __init__(
-        self, raw_dir: Path, client: HttpClient | None = None, min_magnitude: float = 4.5
+        self,
+        raw_dir: Path,
+        client: HttpClient | None = None,
+        min_magnitude: float = 4.5,
+        chunk: str = "YS",
     ) -> None:
         super().__init__(raw_dir, client)
         self._min_magnitude = min_magnitude
+        self._chunk = chunk
 
     def plan(self, window: TimeWindow) -> Sequence[DownloadRequest]:
-        """One request per calendar year overlapping ``window``."""
+        """One request per chunk (calendar year by default) overlapping ``window``."""
         return [self._request(start, end) for start, end in self._chunks(window)]
 
     def _chunks(self, window: TimeWindow) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
-        years = pd.date_range(window.start.normalize(), window.end, freq="YS", tz="UTC")
-        edges = sorted({window.start, *[y for y in years if window.start < y < window.end]})
+        starts = pd.date_range(window.start.normalize(), window.end, freq=self._chunk, tz="UTC")
+        edges = sorted({window.start, *[s for s in starts if window.start < s < window.end]})
         edges.append(window.end)
         return list(pairwise(edges))
 

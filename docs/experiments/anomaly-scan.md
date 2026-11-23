@@ -12,8 +12,11 @@ not a test of the project's primary hypothesis.
 
 ## Setup
 
-- Data: USGS ComCat, `eventtype=earthquake`, M>=4.5 (`configs/ring_of_fire_scan.yaml`).
-- Regions: 17 lat/lon boxes along the Pacific Ring of Fire (may overlap).
+- Data: USGS ComCat, `eventtype=earthquake`, downloaded from M>=2.5 (v2; M>=4.5
+  in v1), cut per region at a magnitude of completeness fitted on training
+  (`configs/ring_of_fire_scan.yaml`).
+- Regions: 17 regions along the Pacific Ring of Fire, each one or more
+  lat/lon boxes; no two regions overlap (v2; v1 boxes overlapped).
 - Windows: Monday 00:00 UTC to the next Monday.
 - Tests per region-week:
   - `activity`: Mc-cut catalog vs. the empirical distribution of the ~1040
@@ -93,10 +96,32 @@ before re-running.
   the fitted shape puts too little mass at typical counts. Replaced with the
   empirical distribution. No real validation data had been scored.
 
+## Version 2 (2026-11-23, after the first real-data run)
+
+Changed, and why:
+
+- **Regions made disjoint.** In v1, the Central America and Northern Andes boxes overlapped,
+  as did Mexico/Central America, Japan/Kamchatka-Kurils, Taiwan-Philippines/Indonesia and
+  Vanuatu-Fiji/Tonga-Kermadec. The Oct 2026 M7.7 sequence was flagged twice. Regions may
+  now be several boxes, and the config refuses overlaps. This was motivated by double
+  counting, not by which regions flagged.
+- **Catalog lowered to M2.5 with a per-region Mc.** The aim is to see swarms of small
+  quakes where networks record them. Mc is maximum curvature + 0.2, using the worst
+  5-year block of the training span and floored at 2.5. A region with too few events
+  falls back to 4.5. It is fitted on training only and written to
+  `results/anomaly/validation/mc.csv`. ComCat carries small events mainly for US
+  networks, so the change mostly affects Alaska-Aleutians, Cascadia and California-Baja;
+  elsewhere Mc stays near 4.5.
+
+The calibration criterion, tests, split and selection rule are unchanged. Validation is
+re-run in full for v2; v1 results remain in git history (commit 04ad65f).
+
 ## Known limitations
 
 - Weekly counts are small; the scan can only detect large departures.
 - Flags are per week. Over a year of weeks, some false flags are expected.
 - The newest days are incomplete in ComCat; the weekly job recomputes every
   2026 week so revisions are picked up.
-- Mixed magnitude types (Mw, mb) and regional completeness differences.
+- Mixed magnitude types (Mw, mb, ML, Md); in US regions small events are ML/Md.
+- Mc is fixed from training. If a network improves later, more small events appear and
+  activity can read as excess; `by_region.csv` observed/expected shows this.
