@@ -32,8 +32,8 @@ def _config() -> EventForecastConfig:
         prereg=PreRegistration(
             hypothesis="h", comparison="c", metric="m", success="s", data="d", variants=1
         ),
-        regions_file="unused.yaml",
-        catalog="unused",
+        regions_file=Path("unused.yaml"),
+        catalog=Path("unused"),
         target_magnitude=5.0,
         secondary_target_magnitude=5.5,
         history_start=to_utc("2000-01-01T00:00Z").to_pydatetime(),

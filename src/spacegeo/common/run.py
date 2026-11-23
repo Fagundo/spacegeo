@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pandas as pd
+
 
 @dataclass(frozen=True)
 class GitState:
@@ -65,6 +67,30 @@ class RunDirectory:
         target.write_text(text)
         return target
 
+    def write_frame(self, name: str, frame: pd.DataFrame, *, index: bool = False) -> Path:
+        """Write a CSV (gzipped deterministically if ``name`` ends in ``.gz``)."""
+        target = self._path / name
+        compression = {"method": "gzip", "mtime": 0} if name.endswith(".gz") else None
+        frame.to_csv(target, index=index, float_format="%.6g", compression=compression)
+        return target
+
     def write_json(self, name: str, payload: object) -> Path:
         """Write JSON (sorted keys, two-space indent)."""
         return self.write_text(name, json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def markdown_table(frame: pd.DataFrame, *, index_name: str | None = None) -> str:
+    """A GitHub-flavoured Markdown table (floats to 4 significant figures).
+
+    Args:
+        frame: Table to render.
+        index_name: Header for the index column; ``None`` leaves the index out.
+    """
+    columns = [str(c) for c in frame.columns]
+    header = ([index_name] if index_name is not None else []) + columns
+    rows = []
+    for label, values in zip(frame.index, frame.itertuples(index=False), strict=True):
+        cells = [f"{v:.4g}" if isinstance(v, float) else str(v) for v in values]
+        rows.append("| " + " | ".join(([str(label)] if index_name else []) + cells) + " |")
+    rule = "|" + "---|" * len(header)
+    return "\n".join(["| " + " | ".join(header) + " |", rule, *rows])

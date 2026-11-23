@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
-from spacegeo.common.run import RunDirectory
+from spacegeo.common.run import RunDirectory, markdown_table
 from spacegeo.training.event_forecast import (
     REFERENCE,
     EventForecastConfig,
@@ -32,15 +32,10 @@ class EventForecastReport:
                 "primary": {k: v for k, v in primary.items() if k not in ("target", "model")},
             },
         )
-        result.scores.to_csv(run.path / "scores.csv", index=False, float_format="%.6g")
-        result.reliability.to_csv(run.path / "reliability.csv", index=False, float_format="%.6g")
-        result.importance.to_csv(run.path / "importance.csv", index=False, float_format="%.6g")
-        result.predictions.to_csv(
-            run.path / "predictions.csv.gz",
-            index=False,
-            float_format="%.6g",
-            compression={"method": "gzip", "mtime": 0},
-        )
+        run.write_frame("scores.csv", result.scores)
+        run.write_frame("reliability.csv", result.reliability)
+        run.write_frame("importance.csv", result.importance)
+        run.write_frame("predictions.csv.gz", result.predictions)
         self._gain_plot(result.scores, run)
         self._reliability_plot(result.reliability, run)
         run.write_text("NOTES.md", self._notes(config, result))
@@ -115,8 +110,7 @@ class EventForecastReport:
             [
                 "# Weekly M>=6 forecast: gradient boosting vs. ETAS",
                 "",
-                f"Hypothesis: {config.prereg.hypothesis}",
-                f"Success criterion: {config.prereg.success}",
+                *config.prereg.header(),
                 "",
                 f"**Primary criterion {verdict}.** Gain of gradient boosting over "
                 f"ETAS-recalibrated: {float(str(p[f'gain_vs_{REFERENCE}'])):.4f} nats per "
@@ -127,21 +121,11 @@ class EventForecastReport:
                 "",
                 "## Scores",
                 "",
-                _markdown(result.scores.loc[:, cols]),
+                markdown_table(result.scores.loc[:, cols]),
                 "",
                 "## Permutation importance (gradient boosting, validation)",
                 "",
-                _markdown(result.importance.head(12)),
+                markdown_table(result.importance.head(12)),
                 "",
             ]
         )
-
-
-def _markdown(frame: pd.DataFrame) -> str:
-    header = "| " + " | ".join(str(c) for c in frame.columns) + " |"
-    rule = "|" + "---|" * len(frame.columns)
-    rows = [
-        "| " + " | ".join(f"{v:.4g}" if isinstance(v, float) else str(v) for v in row) + " |"
-        for row in frame.itertuples(index=False)
-    ]
-    return "\n".join([header, rule, *rows])
