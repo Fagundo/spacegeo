@@ -172,6 +172,17 @@ class EtasLikelihood:
         k, f_in, dg = self._parent_terms(params, idx, t0, t1)
         return params.mu * (t1 - t0) + float((k * f_in * dg).sum())
 
+    def history_integral(self, params: EtasParameters, t0: float, t1: float) -> float:
+        """Expected events in ``[t0, t1)`` from the background and events before ``t0`` only.
+
+        Unlike :meth:`integral`, events inside the window do not contribute,
+        so this is a forecast made at ``t0`` (it leaves out cascades that
+        start inside the window).
+        """
+        idx = self._cat.in_span(t0 - self._settings.t_max_days, t0)
+        k, f_in, dg = self._parent_terms(params, idx, t0, t1)
+        return params.mu * (t1 - t0) + float((k * f_in * dg).sum())
+
     def value_and_grad(self, theta: npt.ArrayLike) -> tuple[float, Array]:
         """Negative log-likelihood and its gradient in optimizer coordinates."""
         params = EtasParameters.from_vector(theta)

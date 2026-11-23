@@ -208,6 +208,46 @@ class CountModel(FittableMixin, ABC):
         """Return log P(N = k)."""
 
 
+class TabularEventModel(FittableMixin, ABC):
+    """P(target event) for each row of a feature table (one row per forecast unit).
+
+    Rows are, e.g., region-weeks; columns are features computed strictly
+    before each row's forecast time. Kept separate from
+    :class:`EventProbabilityModel` because these models never see the raw
+    catalog, only the table.
+    """
+
+    PROBABILITY_FLOOR = 1e-6
+
+    @classmethod
+    @abstractmethod
+    def example(cls) -> Self:
+        """An instance that works on the contract tests' synthetic table."""
+
+    def fit(self, features: pd.DataFrame, targets: pd.Series) -> Self:
+        """Fit on rows of ``features`` with binary ``targets`` (same index)."""
+        if not features.index.equals(targets.index):
+            raise ValueError("features and targets must share an index.")
+        self._fit(features, targets.astype(int))
+        self._mark_fitted()
+        return self
+
+    def predict_proba(self, features: pd.DataFrame) -> npt.NDArray[np.float64]:
+        """P(target) per row, clipped to ``[floor, 1 - floor]`` so log scores stay finite."""
+        self._require_fitted()
+        p = np.asarray(self._predict_proba(features), dtype=np.float64)
+        return np.clip(p, self.PROBABILITY_FLOOR, 1 - self.PROBABILITY_FLOOR)
+
+    @abstractmethod
+    def _fit(self, features: pd.DataFrame, targets: pd.Series) -> None:
+        """Estimate parameters."""
+
+    @abstractmethod
+    def _predict_proba(self, features: pd.DataFrame) -> npt.ArrayLike:
+        """Unclipped probabilities."""
+
+
 FORECAST_MODELS: Registry[ForecastModel] = Registry("forecast model")
 PROBABILITY_MODELS: Registry[EventProbabilityModel] = Registry("probability model")
 COUNT_MODELS: Registry[CountModel] = Registry("count model")
+TABULAR_EVENT_MODELS: Registry[TabularEventModel] = Registry("tabular event model")
