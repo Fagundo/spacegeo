@@ -1,0 +1,50 @@
+# EXPLORATORY (variant 2 in the small-trigger family): the same comparison on
+# the full Cascadia region, offshore included. Written 2026-11-23 after the
+# primary run (configs/small_trigger_etas.yaml) had been scored, at the
+# user's request.
+# Run: uv run spacegeo run configs/small_trigger_etas_cascadia_full.yaml
+#
+# Known bias: offshore ComCat is incomplete below about M3.2-4.2, so the
+# M3.0 model is missing many offshore triggers. The comparison is therefore
+# tilted against it; read a positive result as a lower bound and a null as
+# uninformative.
+prereg:
+  hypothesis: >-
+    Over the full Cascadia region (39-52N, 132-119W), ETAS fitted on M>=3.0
+    events assigns higher likelihood to 2020-2025 M>=4.5 events than ETAS
+    fitted on M>=4.5 events only. Exploratory; not a test of the primary
+    hypothesis.
+  comparison: >-
+    As in configs/small_trigger_etas.yaml (ETAS with m0 = 4.5, same span and
+    settings, same archive cut at 4.5).
+  metric: >-
+    As in configs/small_trigger_etas.yaml: information gain per M>=4.5
+    validation event with a 13-week moving-block bootstrap interval.
+  success: >-
+    Exploratory, reported descriptively: information gain and its 95%
+    interval. With two variants now in this family, the primary result's
+    interval would need a Bonferroni level of 0.025 per variant to keep a
+    family-wise 0.05; noted for the record.
+  data: >-
+    data/catalog/comcat_M2.5_cascadia, region configs/cascadia_full.yaml,
+    low_m0 = 3.0 everywhere despite offshore incompleteness (see above).
+    Otherwise as configs/small_trigger_etas.yaml.
+  variants: 2
+experiment: small_trigger_etas
+regions_file: configs/cascadia_full.yaml
+catalog: data/catalog/comcat_M2.5_cascadia
+mc: 4.5
+low_m0: 3.0
+train_start: "2000-01-01T00:00:00Z"
+val_start: "2020-01-01T00:00:00Z"
+val_end: "2026-01-01T00:00:00Z"
+week_anchor: W-MON
+bootstrap_block_weeks: 13
+bootstrap_resamples: 2000
+seed: 0
+etas:
+  t_max_days: 365
+  r_max_km: 300
+  burn_in_days: 365
+  iterations: 5
+  tolerance: 0.02

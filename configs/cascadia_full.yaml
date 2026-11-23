@@ -1,0 +1,6 @@
+# The full Cascadia region (onshore + offshore), as in the Ring of Fire scan.
+# Offshore (west of 126W) ComCat is only complete to about M3.2-4.2.
+regions:
+  - name: cascadia_full
+    boxes:
+      - {lat_min_deg: 39, lat_max_deg: 52, lon_min_deg: -132, lon_max_deg: -119}
