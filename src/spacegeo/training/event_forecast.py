@@ -21,7 +21,7 @@ from sklearn.metrics import roc_auc_score
 from spacegeo.common.config import BaseConfig
 from spacegeo.common.geo import GeoRegion
 from spacegeo.common.log import get_logger
-from spacegeo.common.stats import block_bootstrap_indices, percentile_interval
+from spacegeo.common.stats import percentile_interval
 from spacegeo.common.time import TimeWindow, duration, to_utc
 from spacegeo.features.base import FeatureSet
 from spacegeo.features.seismicity import (
@@ -39,7 +39,7 @@ from spacegeo.models.tabular import (
     GradientBoostingEventModel,
     LogisticEventModel,
 )
-from spacegeo.training.etas_baseline import EtasSettingsConfig, PreRegistration
+from spacegeo.training.etas_baseline import ValidationExperimentConfig
 
 _log = get_logger(__name__)
 _WEEK = duration(days=7)
@@ -63,51 +63,25 @@ class BoostingConfig(BaseConfig):
         return BoostingParams(**self.model_dump())
 
 
-class EventForecastConfig(BaseConfig):
+class EventForecastConfig(ValidationExperimentConfig):
     """Config of a weekly event-forecast run (``experiment: event_forecast``).
 
     Attributes:
-        prereg: The pre-registration.
-        regions_file: YAML file with the ``regions:`` list.
-        catalog: Committed catalog archive directory.
-        mc: Catalog threshold and ETAS ``m0``.
         target_magnitude: Primary target: at least one event this large in the week.
         secondary_target_magnitude: Secondary target, reported only.
         history_start: First event used (history for features and ETAS burn-in).
-        train_start: First training week.
-        val_start: End of training, start of validation.
-        val_end: End of validation (exclusive); later data is never loaded.
-        week_anchor: Weekday weeks start on.
-        bootstrap_block_weeks: Moving-block length.
-        bootstrap_resamples: Bootstrap resamples.
-        seed: Seed for bootstrap and permutation importance.
-        etas: ETAS settings.
         boosting: Gradient-boosting hyperparameters.
     """
 
     experiment: Literal["event_forecast"]
-    prereg: PreRegistration
-    regions_file: str
-    catalog: str
-    mc: float = 4.5
     target_magnitude: float = 6.0
     secondary_target_magnitude: float = 7.0
     history_start: AwareDatetime
-    train_start: AwareDatetime
-    val_start: AwareDatetime
-    val_end: AwareDatetime
-    week_anchor: str = "W-MON"
-    bootstrap_block_weeks: int = Field(default=13, ge=1)
-    bootstrap_resamples: int = Field(default=2000, ge=100)
-    seed: int = 0
-    etas: EtasSettingsConfig = EtasSettingsConfig()
     boosting: BoostingConfig = BoostingConfig()
 
     def weeks(self, start: AwareDatetime, end: AwareDatetime) -> list[TimeWindow]:
         """Whole anchored weeks in ``[start, end)``."""
-        lo, hi = to_utc(start), to_utc(end)
-        starts = pd.date_range(lo, hi, freq=self.week_anchor)
-        return [TimeWindow(s, s + _WEEK) for s in starts if s + _WEEK <= hi]
+        return self.weeks_between(start, end)
 
 
 @dataclass(frozen=True)
@@ -290,12 +264,7 @@ class EventForecastExperiment:
         y = val[target].to_numpy()
         weeks = pd.factorize(val["week"])[0]
         logs = {k: y * np.log(p) + (1 - y) * np.log(1 - p) for k, p in probs.items()}
-        idx = block_bootstrap_indices(
-            int(weeks.max()) + 1,
-            self._config.bootstrap_block_weeks,
-            self._config.bootstrap_resamples,
-            self._config.seed,
-        )
+        idx = self._config.bootstrap_indices(int(weeks.max()) + 1)
         brier_clim = float(((probs["climatology"] - y) ** 2).mean())
         rows = []
         for name, p in probs.items():

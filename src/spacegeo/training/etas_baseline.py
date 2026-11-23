@@ -41,6 +41,10 @@ class PreRegistration(BaseConfig):
     data: str
     variants: int = Field(ge=1)
 
+    def header(self) -> list[str]:
+        """Hypothesis and success criterion, as Markdown lines for NOTES.md."""
+        return [f"Hypothesis: {self.hypothesis}", f"Success criterion: {self.success}"]
+
 
 class EtasSettingsConfig(BaseConfig):
     """Configurable subset of :class:`EtasSettings` (``m0`` comes from ``mc``)."""
@@ -63,25 +67,24 @@ class EtasSettingsConfig(BaseConfig):
         )
 
 
-class EtasExperimentConfig(BaseConfig):
-    """Config of an ETAS baseline run (``experiment: etas_baseline``).
+class ValidationExperimentConfig(BaseConfig):
+    """Fields shared by experiments scored on a validation span.
 
     Attributes:
         prereg: The pre-registration.
         regions_file: YAML file whose ``regions:`` list defines the regions.
         catalog: Committed catalog archive directory.
         mc: Magnitude threshold (= ETAS ``m0``).
-        train_start: Start of training (the first ``burn_in_days`` are history only).
+        train_start: Start of training.
         val_start: End of training, start of validation.
         val_end: End of validation (exclusive); later data is never loaded.
-        week_anchor: Weekday the validation windows start on.
+        week_anchor: Weekday the windows start on.
         bootstrap_block_weeks: Block length of the moving-block bootstrap.
         bootstrap_resamples: Number of bootstrap resamples.
-        seed: Seed for the bootstrap.
+        seed: Seed for the bootstrap (and any other randomness).
         etas: ETAS truncation and fitting settings.
     """
 
-    experiment: Literal["etas_baseline"]
     prereg: PreRegistration
     regions_file: Path
     catalog: Path
@@ -105,12 +108,31 @@ class EtasExperimentConfig(BaseConfig):
         """Validation span."""
         return TimeWindow(to_utc(self.val_start), to_utc(self.val_end))
 
+    def bootstrap_indices(self, n_weeks: int) -> npt.NDArray[np.int64]:
+        """Moving-block bootstrap resamples of week positions, per this config."""
+        return block_bootstrap_indices(
+            n_weeks, self.bootstrap_block_weeks, self.bootstrap_resamples, self.seed
+        )
+
+    def weeks_between(self, start: AwareDatetime, end: AwareDatetime) -> list[TimeWindow]:
+        """Whole anchored weeks in ``[start, end)``."""
+        lo, hi = to_utc(start), to_utc(end)
+        week = duration(days=7)
+        starts = pd.date_range(lo, hi, freq=self.week_anchor)
+        return [TimeWindow(s, s + week) for s in starts if s + week <= hi]
+
+
+class EtasExperimentConfig(ValidationExperimentConfig):
+    """Config of an ETAS baseline run (``experiment: etas_baseline``).
+
+    The first ``etas.burn_in_days`` of training are history only.
+    """
+
+    experiment: Literal["etas_baseline"]
+
     def weeks(self) -> list[TimeWindow]:
         """Whole anchored weeks inside the validation span."""
-        span = self.validation
-        starts = pd.date_range(span.start, span.end, freq=self.week_anchor)
-        week = duration(days=7)
-        return [TimeWindow(s, s + week) for s in starts if s + week <= span.end]
+        return self.weeks_between(self.val_start, self.val_end)
 
 
 @dataclass(frozen=True)
@@ -228,12 +250,7 @@ class EtasBaselineExperiment:
         gain = diff.pivot(index="week", columns="region", values="d").loc[:, per_region.index]
         count = diff.pivot(index="week", columns="region", values="n").loc[:, per_region.index]
         g, n = gain.to_numpy(), count.to_numpy(dtype=np.float64)
-        idx = block_bootstrap_indices(
-            len(g),
-            self._config.bootstrap_block_weeks,
-            self._config.bootstrap_resamples,
-            self._config.seed,
-        )
+        idx = self._config.bootstrap_indices(len(g))
         per_sample = g[idx].sum(axis=1) / np.maximum(n[idx].sum(axis=1), 1.0)
         pooled_sample = g[idx].sum(axis=(1, 2)) / np.maximum(n[idx].sum(axis=(1, 2)), 1.0)
         lows, highs = np.percentile(per_sample, [2.5, 97.5], axis=0)

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
-from spacegeo.common.run import RunDirectory
+from spacegeo.common.run import RunDirectory, markdown_table
 from spacegeo.training.etas_baseline import EtasBaselineResult, EtasExperimentConfig
 
 
@@ -21,13 +21,8 @@ class EtasBaselineReport:
         run.write_json(
             "metrics.json", {"pooled": result.pooled, "criterion_met": self._met(result)}
         )
-        result.per_region.to_csv(run.path / "per_region.csv", float_format="%.6g")
-        result.weekly.to_csv(
-            run.path / "weekly.csv.gz",
-            index=False,
-            float_format="%.6g",
-            compression={"method": "gzip", "mtime": 0},
-        )
+        run.write_frame("per_region.csv", result.per_region, index=True)
+        run.write_frame("weekly.csv.gz", result.weekly)
         self._gain_plot(result.per_region, result.pooled, run)
         self._cumulative_plot(result.weekly, run)
         run.write_text("NOTES.md", self._notes(config, result))
@@ -85,8 +80,7 @@ class EtasBaselineReport:
             [
                 "# ETAS baseline, Ring of Fire",
                 "",
-                f"Hypothesis: {config.prereg.hypothesis}",
-                f"Success criterion: {config.prereg.success}",
+                *config.prereg.header(),
                 "",
                 f"**Primary criterion {verdict}.** Pooled information gain "
                 f"{pooled['info_gain_per_event']:.3f} nats/event "
@@ -102,17 +96,7 @@ class EtasBaselineReport:
                 "",
                 "## Per region",
                 "",
-                _markdown(table.loc[:, cols].round(3)),
+                markdown_table(table.loc[:, cols].round(3), index_name="region"),
                 "",
             ]
         )
-
-
-def _markdown(frame: pd.DataFrame) -> str:
-    header = "| region | " + " | ".join(str(c) for c in frame.columns) + " |"
-    rule = "|" + "---|" * (len(frame.columns) + 1)
-    rows = [
-        "| " + " | ".join([str(name), *(f"{v:g}" for v in row)]) + " |"
-        for name, row in zip(frame.index, frame.to_numpy(dtype=np.float64), strict=True)
-    ]
-    return "\n".join([header, rule, *rows])
