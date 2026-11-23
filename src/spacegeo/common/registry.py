@@ -6,9 +6,18 @@ added by registering a class, not by editing a dispatch ``if`` chain.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
+from typing import Protocol, cast
 
 from spacegeo.common.exceptions import RegistryError
+
+
+class ClassDecorator(Protocol):
+    """A class decorator that returns the class unchanged (keeps its exact type)."""
+
+    def __call__[C](self, cls: type[C], /) -> type[C]:
+        """Register ``cls`` and return it."""
+        ...
 
 
 class Registry[T]:
@@ -24,13 +33,17 @@ class Registry[T]:
         self._kind = kind
         self._items: dict[str, type[T]] = {}
 
-    def register(self, name: str) -> Callable[[type[T]], type[T]]:
-        """Class decorator that registers ``cls`` under ``name``."""
+    def register(self, name: str) -> ClassDecorator:
+        """Class decorator that registers ``cls`` under ``name``.
 
-        def decorator(cls: type[T]) -> type[T]:
+        The decorated class keeps its own type for static checkers (so a
+        registered subclass's extra attributes stay visible).
+        """
+
+        def decorator[C](cls: type[C], /) -> type[C]:
             if name in self._items:
                 raise RegistryError(f"{self._kind} {name!r} is already registered.")
-            self._items[name] = cls
+            self._items[name] = cast("type[T]", cls)
             return cls
 
         return decorator
