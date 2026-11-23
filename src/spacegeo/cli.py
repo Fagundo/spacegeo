@@ -15,6 +15,8 @@ from spacegeo.data.io.catalog_archive import CatalogArchive
 from spacegeo.evaluation.anomaly import RegionConfig
 from spacegeo.training.etas_baseline import EtasBaselineExperiment, EtasExperimentConfig
 from spacegeo.training.etas_report import EtasBaselineReport
+from spacegeo.training.event_forecast import EventForecastConfig, EventForecastExperiment
+from spacegeo.training.event_forecast_report import EventForecastReport
 
 _log = get_logger("spacegeo")
 
@@ -22,7 +24,7 @@ _log = get_logger("spacegeo")
 class Cli:
     """Entry point; experiment configs choose their runner with ``experiment:``."""
 
-    RUNNERS = ("etas_baseline",)
+    RUNNERS = ("etas_baseline", "event_forecast")
 
     @classmethod
     def main(cls, argv: list[str] | None = None) -> int:
@@ -38,6 +40,8 @@ class Cli:
         if git.dirty and not args.allow_dirty:
             _log.error("Working tree is dirty; commit first or pass --allow-dirty.")
             return 2
+        if kind == "event_forecast":
+            return cls._run_event_forecast(project, config_path, git)
         return cls._run_etas(project, config_path, git)
 
     @staticmethod
@@ -48,6 +52,17 @@ class Cli:
         run = RunDirectory(project.runs, config_path.stem.replace("_", "-"), git, config.seed)
         result = EtasBaselineExperiment(config, regions, catalog).run()
         EtasBaselineReport().write(run, config, result)
+        _log.info("Wrote %s\n%s", run.path, (run.path / "NOTES.md").read_text())
+        return 0
+
+    @staticmethod
+    def _run_event_forecast(project: ProjectPaths, config_path: Path, git: GitState) -> int:
+        config = EventForecastConfig.from_yaml(config_path)
+        regions = {r.name: r.geo for r in RegionConfig.load_all(project.root / config.regions_file)}
+        catalog = CatalogArchive(project.root / config.catalog).read()
+        run = RunDirectory(project.runs, config_path.stem.replace("_", "-"), git, config.seed)
+        result = EventForecastExperiment(config, regions, catalog).run()
+        EventForecastReport().write(run, config, result)
         _log.info("Wrote %s\n%s", run.path, (run.path / "NOTES.md").read_text())
         return 0
 

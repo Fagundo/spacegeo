@@ -104,6 +104,28 @@ class EtasModel(ForecastModel):
             out[i] = float(logs[inside].sum()) - lik.integral(self.parameters, t0, t1)
         return out
 
+    def forecast_counts(
+        self, data: ModelData, windows: Sequence[TimeWindow]
+    ) -> npt.NDArray[np.float64]:
+        """Expected events at or above ``m0`` in each window, as forecast at its start.
+
+        Uses the background plus triggering by events before each window's
+        start; events inside a window are never used for that window.
+        """
+        self._require_fitted()
+        catalog = EtasCatalog.from_frame(data.events, self._region, self._settings)
+        none = np.empty(0, dtype=np.int64)
+        lik = EtasLikelihood(
+            catalog,
+            EtasPairs.build(catalog, none, self._settings),
+            np.empty(0),
+            (0.0, 0.0),
+            self._settings,
+        )
+        return np.array(
+            [lik.history_integral(self.parameters, *_span(w)) for w in windows], dtype=np.float64
+        )
+
     def rescaled_times(self, data: ModelData) -> npt.NDArray[np.float64]:
         """Compensator Lambda(t_i) at each event in ``data.window`` (time rescaling).
 
