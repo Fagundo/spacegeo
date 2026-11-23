@@ -8,21 +8,13 @@ from pathlib import Path
 import pandas as pd
 
 from spacegeo.common.time import duration
+from spacegeo.evaluation.anomaly import RESULT_COLUMNS
 from spacegeo.monitoring.plots import ValidationPlots
 from spacegeo.monitoring.validation import ValidationReport
 
 _FLOAT = "%.6g"
-_TABLE_COLUMNS = [
-    "region",
-    "observed",
-    "expected",
-    "p_high",
-    "p_low",
-    "q_high",
-    "q_low",
-    "flag",
-    "max_mag",
-]
+_HIDDEN_IN_TABLES = frozenset({"ratio", "log_score", "pit"})
+_TABLE_COLUMNS = ["region", *(c for c in RESULT_COLUMNS if c not in _HIDDEN_IN_TABLES)]
 
 
 class ScanReportWriter:
