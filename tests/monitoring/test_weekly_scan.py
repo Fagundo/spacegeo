@@ -18,7 +18,6 @@ REGIONS = tuple(
         boxes=(
             BoxConfig(lat_min_deg=10 * i, lat_max_deg=10 * i + 5, lon_min_deg=0, lon_max_deg=5),
         ),
-        mc=4.5,
     )
     for i in range(6)
 )
@@ -142,7 +141,7 @@ def test_committed_config_loads_with_disjoint_regions() -> None:
         Path(__file__).parents[2] / "configs" / "ring_of_fire_scan.yaml"
     )
     assert len(cfg.regions) == 17
-    assert cfg.catalog_min_magnitude == 2.5
+    assert cfg.mc == 4.5
 
 
 def test_overlapping_regions_rejected() -> None:
@@ -163,14 +162,3 @@ def test_overlapping_regions_rejected() -> None:
             val_start=CONFIG.val_start,
             test_start=CONFIG.test_start,
         )
-
-
-def test_mc_is_fitted_per_region_on_training_only() -> None:
-    estimated = tuple(r.model_copy(update={"mc": None}) for r in REGIONS)
-    cfg = CONFIG.model_copy(update={"regions": estimated})
-    catalog = _null_catalog()
-    late = catalog.index >= CONFIG.val_start
-    catalog.loc[late, "mag"] = catalog.loc[late, "mag"] - 1.0  # later data must not move Mc
-    scan = WeeklyAnomalyScan(cfg, catalog)
-    assert set(scan.mc) == {r.name for r in REGIONS}
-    assert all(4.5 <= v <= 4.9 for v in scan.mc.values())

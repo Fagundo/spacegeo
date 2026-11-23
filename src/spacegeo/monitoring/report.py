@@ -14,7 +14,7 @@ from spacegeo.monitoring.validation import ValidationReport
 
 _FLOAT = "%.6g"
 _HIDDEN_IN_TABLES = frozenset({"ratio", "log_score", "pit"})
-_TABLE_COLUMNS = ["region", "mc", *(c for c in RESULT_COLUMNS if c not in _HIDDEN_IN_TABLES)]
+_TABLE_COLUMNS = ["region", *(c for c in RESULT_COLUMNS if c not in _HIDDEN_IN_TABLES)]
 
 
 class ScanReportWriter:
@@ -52,7 +52,6 @@ class ScanReportWriter:
         self._csv(report.model_comparison, out / "model_comparison.csv")
         self._csv(report.power, out / "power.csv", index=False)
         self._csv(report.min_detectable, out / "min_detectable.csv", index=False)
-        self._csv(report.mc, out / "mc.csv", index=False)
         self._plots.pit(report.pit_histogram, out / "pit.png")
         self._plots.power(report.power, out / "power.png")
         (out / "README.md").write_text(self._validation_markdown(report))
@@ -66,10 +65,6 @@ class ScanReportWriter:
             "# Validation (train fit, validation weeks scored)",
             "",
             "Pre-registration: `docs/experiments/anomaly-scan.md`.",
-            "",
-            "## Magnitude of completeness per region (fitted on training)",
-            "",
-            self._frame_table(report.mc),
             "",
             "## Calibration of the live tests",
             "",

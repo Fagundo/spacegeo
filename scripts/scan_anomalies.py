@@ -44,9 +44,7 @@ class ScanCommand:
 
     def __init__(self, project: ProjectPaths, config: WeeklyScanConfig) -> None:
         self._config = config
-        catalog = CatalogArchive(
-            project.catalog_archive("comcat", config.catalog_min_magnitude)
-        ).read()
+        catalog = CatalogArchive(project.catalog_archive("comcat", config.mc)).read()
         self._scan = WeeklyAnomalyScan(config, catalog)
         self._writer = ScanReportWriter(project.results / "anomaly")
 
@@ -65,9 +63,6 @@ class ScanCommand:
     def predict(self, as_of: pd.Timestamp) -> None:
         """Score the test span up to ``as_of``."""
         results = self._scan.predict(as_of).results
-        results.insert(
-            results.columns.get_loc("region") + 1, "mc", results["region"].map(self._scan.mc)
-        )
         by_test_path = self._writer.validation_dir / "by_test.csv"
         calibration = pd.read_csv(by_test_path, index_col="test") if by_test_path.exists() else None
         self._writer.write_predictions(results, calibration)

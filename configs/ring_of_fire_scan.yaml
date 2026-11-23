@@ -9,20 +9,9 @@
 #   train 2000-2019  -> fit each region's weekly count model
 #   val   2020-2025  -> check the p-values are calibrated (no fitting here)
 #   test  2026 on    -> live weekly predictions, models refit on 2000-2025
-#
-# Catalog: everything M>=2.5 is downloaded (monthly chunks stay under the
-# service's 20,000-event limit). Each region then gets its own magnitude of
-# completeness, fitted on the training span only: maximum curvature + 0.2,
-# taking the worst of the 5-year blocks so the cut holds in every era. Where
-# ComCat has few small events (most non-US regions) the estimate lands near
-# M4.5 or falls back to it. A region can pin its Mc with `mc:`.
-catalog_min_magnitude: 2.5
-download_chunk: MS
-completeness:
-  correction: 0.2
-  block_years: 5
-  min_events: 50
-  fallback: 4.5
+# Global ComCat is close to complete at M4.5 over this span (less so in remote
+# oceanic segments, e.g. parts of Tonga-Kermadec and the Aleutians).
+mc: 4.5
 train_start: "2000-01-01T00:00:00Z"
 val_start: "2020-01-01T00:00:00Z"
 test_start: "2026-01-01T00:00:00Z"

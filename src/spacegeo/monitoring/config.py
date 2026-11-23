@@ -7,35 +7,7 @@ from pydantic import AwareDatetime, Field, model_validator
 
 from spacegeo.common.config import BaseConfig
 from spacegeo.common.time import TimeWindow, duration, to_utc
-from spacegeo.data.preprocessing.regional_completeness import CompletenessSettings
 from spacegeo.evaluation.anomaly import RegionConfig
-
-
-class CompletenessConfig(BaseConfig):
-    """Per-region Mc estimation (see ``RegionalCompletenessCut``).
-
-    Attributes:
-        correction: Added to the maximum-curvature estimate.
-        block_years: Training span is split into blocks this long; the
-            largest block estimate is used.
-        min_events: Fewest events a block needs to give an estimate.
-        fallback: Mc for a region without enough events.
-    """
-
-    correction: float = 0.2
-    block_years: int = Field(default=5, ge=1)
-    min_events: int = Field(default=50, ge=10)
-    fallback: float = 4.5
-
-    @property
-    def settings(self) -> CompletenessSettings:
-        """As the preprocessor's settings object."""
-        return CompletenessSettings(
-            correction=self.correction,
-            block_years=self.block_years,
-            min_events=self.min_events,
-            fallback=self.fallback,
-        )
 
 
 class WeeklyScanConfig(BaseConfig):
@@ -47,11 +19,7 @@ class WeeklyScanConfig(BaseConfig):
 
     Attributes:
         regions: Regions to test (may overlap; each is tested on its own).
-        catalog_min_magnitude: Lowest magnitude downloaded and stored; also
-            the lowest Mc any region may get.
-        download_chunk: Pandas frequency for download chunks (``MS`` keeps
-            each query under the service's 20,000-event limit at M2.5).
-        completeness: How each region's Mc is estimated on the training span.
+        mc: Magnitude of completeness applied to the catalog.
         train_start: Start of the history.
         val_start: End of training, start of validation.
         test_start: End of validation, start of live predictions.
@@ -64,9 +32,7 @@ class WeeklyScanConfig(BaseConfig):
     """
 
     regions: tuple[RegionConfig, ...] = Field(min_length=1)
-    catalog_min_magnitude: float = 2.5
-    download_chunk: str = "MS"
-    completeness: CompletenessConfig = CompletenessConfig()
+    mc: float = 4.5
     train_start: AwareDatetime
     val_start: AwareDatetime
     test_start: AwareDatetime

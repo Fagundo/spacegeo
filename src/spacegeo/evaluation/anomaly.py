@@ -64,13 +64,10 @@ class RegionConfig(BaseConfig):
     Attributes:
         name: Region name used in outputs.
         boxes: Pieces of the region (union).
-        mc: Optional fixed magnitude of completeness for this region; when
-            unset, the pipeline estimates it on the training span.
     """
 
     name: str
     boxes: tuple[BoxConfig, ...] = Field(min_length=1)
-    mc: float | None = None
 
     @property
     def geo(self) -> GeoRegion:
