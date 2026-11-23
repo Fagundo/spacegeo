@@ -1,0 +1,13 @@
+{
+  "criterion_met": false,
+  "pooled": {
+    "info_gain_hi": 0.42411128144678506,
+    "info_gain_lo": -0.3974457059209781,
+    "info_gain_per_event": -0.09438901714245528,
+    "max_branching_ratio": 0.8161705489773251,
+    "n_events": 169.0,
+    "n_regions": 1.0,
+    "n_weeks": 312.0,
+    "regions_gain_ci_above_0": 0.0
+  }
+}
