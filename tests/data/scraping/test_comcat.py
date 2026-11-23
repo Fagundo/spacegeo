@@ -1,6 +1,7 @@
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+from spacegeo.common.geo import GeoBox
 from spacegeo.common.time import TimeWindow, to_utc
 from spacegeo.data.scraping.base import SCRAPERS
 from spacegeo.data.scraping.comcat import ComCatScraper
@@ -55,3 +56,17 @@ def test_monthly_chunks(tmp_path: Path) -> None:
     starts = [parse_qs(urlparse(r.url).query)["starttime"][0] for r in plan]
     assert starts == ["2026-01-01T00:00:00", "2026-02-01T00:00:00", "2026-03-01T00:00:00"]
     assert all("minmagnitude=2.5" in r.url for r in plan)
+
+
+def test_box_queries_one_request_per_box_and_chunk(tmp_path: Path) -> None:
+    boxes = [GeoBox(50, 65, 165, -135), GeoBox(30, 39, -126, -114)]
+    scraper = ComCatScraper(
+        tmp_path, client=_NoNetwork(), min_magnitude=2.5, chunk="QS", bounds=boxes
+    )
+    plan = scraper.plan(TimeWindow(to_utc("2025-01-01T00:00Z"), to_utc("2025-07-01T00:00Z")))
+    assert len(plan) == 4
+    first = parse_qs(urlparse(plan[0].url).query)
+    assert (first["minlongitude"], first["maxlongitude"]) == (["165"], ["225"])
+    second = parse_qs(urlparse(plan[1].url).query)
+    assert (second["minlatitude"], second["maxlongitude"]) == (["30"], ["-114"])
+    assert len({r.filename for r in plan}) == 4

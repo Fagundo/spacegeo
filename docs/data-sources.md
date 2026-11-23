@@ -11,7 +11,10 @@ _Planned: OMNI2 hourly, GFZ Kp, CDAW LASCO CME catalog._
 - **URL:** FDSN event service, `https://earthquake.usgs.gov/fdsnws/event/1/query`
   (`format=csv`, `eventtype=earthquake`).
 - **License/terms:** U.S. public domain.
-- **Coverage:** global; this project queries M >= Mc (default 4.5).
+- **Coverage:** global M >= 4.5 (`data/catalog/comcat_M4.5`), plus M >= 2.5 for
+  Alaska-Aleutians, Cascadia and California-Baja, where US networks record small
+  quakes (`data/catalog/comcat_M2.5_<region>`, bounding-box queries). The list
+  of archives is `configs/catalogs.yaml`.
 - **Cadence:** near-real-time; events are revised for days to weeks (magnitude,
   location, status `automatic` -> `reviewed`, occasional deletions).
 - **Format:** CSV, one row per event. Read columns: `time` (ISO-8601 UTC),
