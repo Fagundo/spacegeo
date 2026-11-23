@@ -45,6 +45,20 @@ class ProjectPaths:
         """Experiment configs (committed)."""
         return self.root / "configs"
 
+    @property
+    def results(self) -> Path:
+        """Committed, CI-maintained outputs (e.g. the weekly anomaly scan)."""
+        return self.root / "results"
+
+    @property
+    def data_catalog(self) -> Path:
+        """Committed, CI-maintained parsed catalogs."""
+        return self.root / "data" / "catalog"
+
+    def catalog_archive(self, source_name: str, min_magnitude: float) -> Path:
+        """Archive directory for one catalog source at one magnitude cut."""
+        return self.data_catalog / f"{source_name}_M{min_magnitude:g}"
+
     def raw_source(self, source_name: str) -> Path:
         """Raw directory for one data source."""
         return self.data_raw / source_name

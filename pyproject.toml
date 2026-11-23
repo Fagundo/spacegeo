@@ -9,6 +9,7 @@ dependencies = [
     "pandas>=2.2",
     "pydantic>=2.7",
     "pyyaml>=6.0",
+    "matplotlib>=3.8",
 ]
 
 [build-system]
@@ -103,6 +104,7 @@ root_package = "spacegeo"
 name = "Layered architecture: each layer imports only the layers below it"
 type = "layers"
 layers = [
+    "spacegeo.monitoring",
     "spacegeo.training",
     "spacegeo.evaluation",
     "spacegeo.models",

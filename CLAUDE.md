@@ -32,13 +32,14 @@ src/spacegeo/
     io/              DatasetReader: raw file -> validated UTC DataFrame
     preprocessing/   Preprocessor: Mc cuts, regional filters, declustering
   features/          Feature: leakage-safe covariates at forecast times
-  models/            ForecastModel, EventProbabilityModel
-  evaluation/        Metric, ComparativeMetric, Evaluator
+  models/            ForecastModel, EventProbabilityModel, CountModel
+  evaluation/        Metric, ComparativeMetric, Evaluator, anomaly scanner
   training/          TemporalSplitter, Trainer
+  monitoring/        operational pipelines (catalog updates, weekly scan)
 ```
 
 **Dependencies point downward only:**
-`training → evaluation → models → features → data → common`.
+`monitoring → training → evaluation → models → features → data → common`.
 `data.scraping`, `data.io` and `data.preprocessing` never import each other;
 they share code only through `common`.
 
@@ -127,7 +128,11 @@ uv run pytest                           # incl. tests/architecture and tests/con
 - `data/raw/` is immutable and gitignored. Only scrapers write to it, and
   they record URL, retrieval time and SHA-256 in `PROVENANCE.json`.
 - `data/processed/` is gitignored and fully regenerable from raw + code.
-- Never commit data files, credentials or large binaries.
+- Exception: `data/catalog/` (parsed catalogs, one deterministic `.csv.gz`
+  per year) and `results/anomaly/` are committed, and only by the
+  `weekly-scan` workflow (`scripts/update_catalog.py`,
+  `scripts/scan_anomalies.py`). Don't hand-edit them.
+- Otherwise never commit data files, credentials or large binaries.
 - Earthquake catalog: fix a magnitude of completeness (Mc) per era and state
   it in the config. Decluster before testing for external triggering, and
   record which method and parameters were used.
