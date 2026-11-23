@@ -83,6 +83,8 @@ class ValidationExperimentConfig(BaseConfig):
         bootstrap_resamples: Number of bootstrap resamples.
         seed: Seed for the bootstrap (and any other randomness).
         etas: ETAS truncation and fitting settings.
+        extra_catalogs: More archives combined with ``catalog`` (duplicates by
+            event id dropped).
     """
 
     prereg: PreRegistration
@@ -97,6 +99,16 @@ class ValidationExperimentConfig(BaseConfig):
     bootstrap_resamples: int = Field(default=2000, ge=100)
     seed: int = 0
     etas: EtasSettingsConfig = EtasSettingsConfig()
+    extra_catalogs: tuple[Path, ...] = ()
+
+    @property
+    def catalog_paths(self) -> tuple[Path, ...]:
+        """``catalog`` followed by ``extra_catalogs`` (loaded and combined)."""
+        return (self.catalog, *self.extra_catalogs)
+
+    def validation_weeks(self) -> list[TimeWindow]:
+        """Whole anchored weeks inside the validation span."""
+        return self.weeks_between(self.val_start, self.val_end)
 
     @property
     def train(self) -> TimeWindow:
@@ -132,7 +144,7 @@ class EtasExperimentConfig(ValidationExperimentConfig):
 
     def weeks(self) -> list[TimeWindow]:
         """Whole anchored weeks inside the validation span."""
-        return self.weeks_between(self.val_start, self.val_end)
+        return self.validation_weeks()
 
 
 @dataclass(frozen=True)
@@ -141,7 +153,7 @@ class RegionFit:
 
     Attributes:
         summary: Scalars for the per-region table.
-        weekly: Per validation week: ``n``, ``ll_etas``, ``ll_poisson``.
+        weekly: Per validation week: ``n``, ``ll_model``, ``ll_reference``.
     """
 
     summary: dict[str, float | int | str]
@@ -154,7 +166,7 @@ class EtasBaselineResult:
 
     Attributes:
         per_region: One row per region: fit, scores, residual test, interval.
-        weekly: Long frame: ``week``, ``region``, ``n``, ``ll_etas``, ``ll_poisson``.
+        weekly: Long frame: ``week``, ``region``, ``n``, ``ll_model``, ``ll_reference``.
         pooled: Pooled information gain and its interval.
     """
 
@@ -166,6 +178,9 @@ class EtasBaselineResult:
 class EtasBaselineExperiment:
     """Runs the pre-registered ETAS vs. smoothed-Poisson comparison.
 
+    Subclasses compare other model pairs by overriding :meth:`_fit_region`
+    (weekly ``ll_model`` / ``ll_reference`` columns) and :meth:`_pooled_extras`.
+
     Args:
         config: Experiment config.
         regions: Region name -> geometry.
@@ -176,7 +191,7 @@ class EtasBaselineExperiment:
 
     def __init__(
         self,
-        config: EtasExperimentConfig,
+        config: ValidationExperimentConfig,
         regions: dict[str, GeoRegion],
         catalog: pd.DataFrame,
     ) -> None:
@@ -184,7 +199,7 @@ class EtasBaselineExperiment:
         self._regions = regions
         self._catalog = catalog.loc[catalog.index < to_utc(config.val_end)]
         self._settings = config.etas.settings(config.mc)
-        self._weeks = config.weeks()
+        self._weeks = config.validation_weeks()
 
     def run(self) -> EtasBaselineResult:
         """Fit and score every region, then summarize."""
@@ -224,20 +239,34 @@ class EtasBaselineExperiment:
             "ks_statistic": float(ks.statistic) if ks else np.nan,
             "ks_p": float(ks.pvalue) if ks else np.nan,
         }
+        return self._region_fit(summary, counts, ll_etas, ll_poisson)
+
+    def _region_fit(
+        self,
+        summary: dict[str, float | int | str],
+        counts: npt.NDArray[np.int64],
+        ll_model: npt.NDArray[np.float64],
+        ll_reference: npt.NDArray[np.float64],
+    ) -> RegionFit:
+        """Package one region's summary and weekly scores."""
         weekly = pd.DataFrame(
             {
                 "week": [w.start for w in self._weeks],
                 "n": counts,
-                "ll_etas": ll_etas,
-                "ll_poisson": ll_poisson,
+                "ll_model": ll_model,
+                "ll_reference": ll_reference,
             }
         )
         return RegionFit(summary=summary, weekly=weekly)
 
-    def _local(self, region: GeoRegion, window: TimeWindow) -> npt.NDArray[np.bool_]:
+    def _local(
+        self, region: GeoRegion, window: TimeWindow, magnitude: float | None = None
+    ) -> npt.NDArray[np.bool_]:
+        """Events in ``region`` and ``window`` at or above ``magnitude`` (default ``mc``)."""
         cat = self._catalog
+        threshold = self._config.mc if magnitude is None else magnitude
         inside = region.contains(cat["lat_deg"], cat["lon_deg"])
-        big_enough = cat["mag"].to_numpy() >= self._config.mc - 1e-9
+        big_enough = cat["mag"].to_numpy() >= threshold - 1e-9
         return inside & big_enough & window.mask(cat.index)
 
     def _weekly_counts(self, region: GeoRegion) -> npt.NDArray[np.int64]:
@@ -246,7 +275,7 @@ class EtasBaselineExperiment:
     def _bootstrap(
         self, per_region: pd.DataFrame, weekly: pd.DataFrame
     ) -> tuple[pd.DataFrame, dict[str, float]]:
-        diff = weekly.assign(d=weekly["ll_etas"] - weekly["ll_poisson"])
+        diff = weekly.assign(d=weekly["ll_model"] - weekly["ll_reference"])
         gain = diff.pivot(index="week", columns="region", values="d").loc[:, per_region.index]
         count = diff.pivot(index="week", columns="region", values="n").loc[:, per_region.index]
         g, n = gain.to_numpy(), count.to_numpy(dtype=np.float64)
@@ -260,7 +289,6 @@ class EtasBaselineExperiment:
             info_gain_hi=highs,
             p_gain_le_0=p_gain,
             p_gain_holm=holm(p_gain),
-            ks_p_holm=holm(per_region["ks_p"].fillna(1.0).to_numpy()),
         )
         low, high = percentile_interval(pooled_sample)
         pooled = {
@@ -271,7 +299,16 @@ class EtasBaselineExperiment:
             "n_weeks": float(len(g)),
             "n_regions": float(g.shape[1]),
             "regions_gain_ci_above_0": float((lows > 0).sum()),
+        }
+        return self._pooled_extras(out, pooled)
+
+    def _pooled_extras(
+        self, per_region: pd.DataFrame, pooled: dict[str, float]
+    ) -> tuple[pd.DataFrame, dict[str, float]]:
+        """Residual-test and branching-ratio summaries (ETAS vs. Poisson run)."""
+        out = per_region.assign(ks_p_holm=holm(per_region["ks_p"].fillna(1.0).to_numpy()))
+        extras = {
             "regions_ks_reject_holm_0.05": float((out["ks_p_holm"].to_numpy() <= _ALPHA).sum()),
             "max_branching_ratio": float(per_region["branching_ratio"].to_numpy().max()),
         }
-        return out, pooled
+        return out, {**pooled, **extras}

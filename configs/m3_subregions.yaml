@@ -1,0 +1,14 @@
+# Sub-regions where ComCat is complete to about M3.0 (training-span check,
+# 2000-2019: maximum curvature + 0.2 <= 2.9 and Aki b-value above M3.0 of
+# 0.8-1.05). The western Aleutians (b ~0.5) and offshore Cascadia
+# (Mc 3.2-4.2) are left out because small events there are missing.
+regions:
+  - name: alaska_mainland
+    boxes:
+      - {lat_min_deg: 50, lat_max_deg: 65, lon_min_deg: -160, lon_max_deg: -135}
+  - name: cascadia_onshore
+    boxes:
+      - {lat_min_deg: 39, lat_max_deg: 52, lon_min_deg: -126, lon_max_deg: -119}
+  - name: california
+    boxes:
+      - {lat_min_deg: 32.5, lat_max_deg: 39, lon_min_deg: -126, lon_max_deg: -114}

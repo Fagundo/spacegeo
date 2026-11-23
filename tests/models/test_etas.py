@@ -126,3 +126,19 @@ def test_forecast_counts_ignore_events_inside_the_window(catalog, fitted) -> Non
     expected = fitted.forecast_counts(ModelData(catalog, VAL), weeks).sum()
     observed = int(sum(w.mask(catalog.index).sum() for w in weeks))
     assert 0.5 * observed < expected < 1.2 * observed  # no in-window cascades -> some shortfall
+
+
+def test_scoring_only_large_events(catalog, fitted) -> None:
+    data = ModelData(catalog, VAL)
+    week = [VAL]
+    full = fitted.log_likelihood_above(data, week, SETTINGS.m0, 1.0)
+    assert full == pytest.approx(fitted.log_likelihood_by_window(data, week))
+    big = 5.0
+    dm = catalog.loc[TRAIN.mask(catalog.index), "mag"].to_numpy()
+    fraction = float((dm >= big).mean())
+    part = fitted.log_likelihood_above(data, week, big, fraction)
+    n_big = int((catalog.loc[VAL.mask(catalog.index), "mag"] >= big).sum())
+    assert n_big > 0
+    assert np.isfinite(part).all()
+    with pytest.raises(ValueError, match="magnitude >= m0"):
+        fitted.log_likelihood_above(data, week, SETTINGS.m0 - 1, 1.0)

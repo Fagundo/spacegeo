@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import yaml
 
 from spacegeo.common.log import get_logger
@@ -24,6 +25,11 @@ from spacegeo.training.etas_baseline import (
 from spacegeo.training.etas_report import EtasBaselineReport
 from spacegeo.training.event_forecast import EventForecastConfig, EventForecastExperiment
 from spacegeo.training.event_forecast_report import EventForecastReport
+from spacegeo.training.small_trigger import (
+    SmallTriggerConfig,
+    SmallTriggerExperiment,
+    SmallTriggerReport,
+)
 
 _log = get_logger("spacegeo")
 
@@ -40,6 +46,7 @@ class _Runner:
 _RUNNERS: dict[str, _Runner] = {
     "etas_baseline": _Runner(EtasExperimentConfig, EtasBaselineExperiment, EtasBaselineReport),
     "event_forecast": _Runner(EventForecastConfig, EventForecastExperiment, EventForecastReport),
+    "small_trigger_etas": _Runner(SmallTriggerConfig, SmallTriggerExperiment, SmallTriggerReport),
 }
 
 
@@ -67,7 +74,9 @@ class Cli:
     def _run(runner: _Runner, project: ProjectPaths, config_path: Path, git: GitState) -> int:
         config = runner.config.from_yaml(config_path)
         regions = {r.name: r.geo for r in RegionConfig.load_all(project.root / config.regions_file)}
-        catalog = CatalogArchive(project.root / config.catalog).read()
+        frames = [CatalogArchive(project.root / path).read() for path in config.catalog_paths]
+        catalog = pd.concat(frames).sort_index()
+        catalog = catalog.loc[~catalog["event_id"].duplicated(keep="last")]
         run = RunDirectory(project.runs, config_path.stem.replace("_", "-"), git, config.seed)
         result = runner.experiment(config, regions, catalog).run()
         runner.report().write(run, config, result)

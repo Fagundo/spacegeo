@@ -89,19 +89,46 @@ class EtasModel(ForecastModel):
         self, data: ModelData, windows: Sequence[TimeWindow]
     ) -> npt.NDArray[np.float64]:
         """Log-likelihood of each window's events, using all earlier history."""
+        return self.log_likelihood_above(data, windows, self._settings.m0, 1.0)
+
+    def log_likelihood_above(
+        self,
+        data: ModelData,
+        windows: Sequence[TimeWindow],
+        magnitude: float,
+        fraction: float,
+    ) -> npt.NDArray[np.float64]:
+        """Log-likelihood of only the events at or above ``magnitude`` in each window.
+
+        Every event at or above ``m0`` still triggers. The rate of target
+        events is the ETAS rate times ``fraction``, the share of events above
+        ``m0`` that reach ``magnitude`` (magnitudes independent of the
+        triggering history, as ETAS assumes). With ``magnitude = m0`` and
+        ``fraction = 1`` this is the ordinary log-likelihood, so models with
+        different ``m0`` can be compared on the same target events.
+
+        Args:
+            data: Catalog (all history is used).
+            windows: Scoring windows, time-ordered.
+            magnitude: Smallest target magnitude (>= ``m0``).
+            fraction: P(M >= magnitude | M >= m0), in (0, 1].
+        """
         self._require_fitted()
+        if magnitude < self._settings.m0 - 1e-9 or not 0 < fraction <= 1:
+            raise ValueError("Need magnitude >= m0 and 0 < fraction <= 1.")
         if not windows:
             return np.empty(0)
         catalog = EtasCatalog.from_frame(data.events, self._region, self._settings)
         start, end = _span(windows[0])[0], max(_span(w)[1] for w in windows)
-        lik = self._likelihood(catalog, (start, end))
-        logs = lik.target_log_terms(self.parameters)
-        times = catalog.t[catalog.in_span(start, end)]
+        lik = self._likelihood(catalog, (start, end), magnitude - self._settings.m0)
+        logs = lik.target_log_terms(self.parameters) + np.log(fraction)
+        times = catalog.t[lik.targets]
         out = np.empty(len(windows))
         for i, window in enumerate(windows):
             t0, t1 = _span(window)
             inside = (times >= t0) & (times < t1)
-            out[i] = float(logs[inside].sum()) - lik.integral(self.parameters, t0, t1)
+            compensator = fraction * lik.integral(self.parameters, t0, t1)
+            out[i] = float(logs[inside].sum()) - compensator
         return out
 
     def forecast_counts(
@@ -144,8 +171,11 @@ class EtasModel(ForecastModel):
     def _log_likelihood(self, data: ModelData) -> float:
         return float(self.log_likelihood_by_window(data, [data.window])[0])
 
-    def _likelihood(self, catalog: EtasCatalog, span: tuple[float, float]) -> EtasLikelihood:
+    def _likelihood(
+        self, catalog: EtasCatalog, span: tuple[float, float], min_dm: float = 0.0
+    ) -> EtasLikelihood:
         targets = catalog.in_span(*span)
+        targets = targets[catalog.dm[targets] >= min_dm - 1e-9]
         pairs = EtasPairs.build(catalog, targets, self._settings)
         background = self._background.density(catalog.lat[targets], catalog.lon[targets])
         return EtasLikelihood(catalog, pairs, background, span, self._settings)
