@@ -58,7 +58,7 @@ class EtasBaselineReport:
         self, per_region: pd.DataFrame, pooled: dict[str, float], run: RunDirectory
     ) -> None:
         table = per_region.sort_values("info_gain_per_event")
-        fig = Figure(figsize=(7, max(2.5, 0.35 * len(table) + 1)))
+        fig = Figure(figsize=(7, max(3.2, 0.35 * len(table) + 1.5)))
         ax = fig.subplots()
         y = np.arange(len(table))
         lo = table["info_gain_per_event"] - table["info_gain_lo"]
@@ -67,10 +67,8 @@ class EtasBaselineReport:
         ax.axvline(0, color="#555555", linewidth=1)
         ax.axvline(pooled["info_gain_per_event"], color="#999999", linestyle="--", linewidth=1)
         ax.set_yticks(y, table.index)
-        ax.set_xlabel(
-            f"information gain of {self.MODEL} over {self.REFERENCE}, nats per {self.UNIT}"
-        )
-        ax.set_title(f"{self.MODEL} vs. {self.REFERENCE}, validation 2020-2025")
+        ax.set_xlabel(f"information gain, nats per {self.UNIT} (95% block bootstrap)")
+        ax.set_title(f"{self.MODEL} vs. {self.REFERENCE}\nvalidation 2020-2025")
         fig.tight_layout()
         fig.savefig(run.path / "info_gain_by_region.png", dpi=110, metadata={"Software": None})
 
