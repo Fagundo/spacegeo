@@ -1,0 +1,95 @@
+# ETAS + space-weather background modulation, Pacific Ring of Fire.
+# Run: uv run spacegeo run configs/space_weather_etas.yaml
+#
+# Pre-registered 2026-11-24 UTC, before any space-weather feature or model code
+# existed and before any space-weather series was compared with seismicity.
+# Full design: docs/experiments/space-weather-etas.md. The prereg block is
+# frozen; implementation fields below may only change to fix bugs, and any
+# such change is listed in the results NOTES.md.
+prereg:
+  hypothesis: >-
+    Recent solar-wind driving of the magnetosphere modulates the background
+    rate of M>=4.5 earthquakes: adding a space-weather term to the ETAS
+    background improves out-of-sample forecasts. Three mechanisms are tested
+    separately: (E) energy input, Newell coupling
+    v^(4/3) B_T^(2/3) sin^(8/3)(theta/2); (V) solar-wind variability, OMNI
+    within-hour sigma of Bz; (C) magnetospheric compression, solar-wind
+    dynamic pressure.
+  comparison: >-
+    The Ring of Fire ETAS baseline (same settings as etas_ring_of_fire.yaml),
+    fitted per region on 2000-2019. The space-weather model keeps every
+    triggering parameter and the spatial background density fixed at that
+    fit and multiplies the background rate by
+    c_r * exp(b1*z_1d + b4*z_4d + b16*z_16d), with one b per smoothing scale
+    shared across all 17 regions and a free normaliser c_r per region,
+    fitted by maximum likelihood on training events.
+  metric: >-
+    Per mechanism: pooled information gain per event over all 17 regions on
+    the 2020-2025 validation span, G = (log L_SW - log L_ETAS) / N, both
+    conditioned on all earlier events, magnitude terms excluded. Feature z_tau
+    (tau = 1, 4, 16 days, e-folding) = log of a gap-aware exponential moving
+    average of the hourly input over tau, minus log of the same average over
+    365 days (removes the solar cycle), standardised with training-span mean
+    and sd. Only hours that ended before t are used. Hours with less than half
+    of the EMA weight observed get z = 0 (no modulation); nothing is
+    forward-filled.
+  success: >-
+    A mechanism counts as detected only if both hold: (1) circular-shift test:
+    p = (1 + #{G_shift >= G}) / 200 from 199 random circular shifts of the
+    hourly feature series over 2001-2025 (offsets uniform in [365 days, span
+    - 365 days]; b and c_r refitted on training for each shift), Holm-adjusted
+    across the three mechanisms, < 0.05; and (2) G > 0 with its 95%
+    moving-block bootstrap interval (13-week blocks, same weeks in every
+    region) excluding 0. Otherwise the result is a null, reported as the 95%
+    interval on the rate change per 1 sd of each z_tau. Secondary, reported
+    regardless and interpreted only if a mechanism is detected: Spearman
+    correlation between per-region information gain and |geomagnetic
+    latitude| of the region centroid (centred dipole, IGRF-13 2020 pole
+    80.65 N, 72.68 W), one-sided, predicting a larger effect at high magnetic
+    latitude.
+  data: >-
+    USGS ComCat M>=4.5 (data/catalog/comcat_M4.5); m0 = Mc = 4.5; no
+    declustering (ETAS models clustering); 17 disjoint regions from
+    configs/ring_of_fire_scan.yaml. NASA OMNI2 hourly
+    (data/space_weather/omni2): speed_km_s, by_gsm_nT, bz_gsm_nT (E),
+    sigma_bz_nT (V), pdyn_nPa (C). Train 2000-01-01 to 2020-01-01 (first 365
+    days only history for ETAS and the 365-day detrending average);
+    validation 2020-01-01 to 2026-01-01; test span 2026+ locked.
+  variants: 5
+experiment: space_weather_etas
+regions_file: configs/ring_of_fire_scan.yaml
+catalog: data/catalog/comcat_M4.5
+mc: 4.5
+train_start: "2000-01-01T00:00:00Z"
+val_start: "2020-01-01T00:00:00Z"
+val_end: "2026-01-01T00:00:00Z"
+week_anchor: W-MON
+bootstrap_block_weeks: 13
+bootstrap_resamples: 2000
+seed: 0
+etas:
+  t_max_days: 365
+  r_max_km: 300
+  burn_in_days: 365
+  iterations: 5
+  tolerance: 0.02
+space_weather:
+  archive: data/space_weather/omni2
+  mechanisms:
+    - name: energy
+      feature: newell_coupling
+    - name: variability
+      feature: bz_sigma
+    - name: compression
+      feature: dynamic_pressure
+  taus_days: [1, 4, 16]
+  detrend_days: 365
+  min_weight_fraction: 0.5
+  shift_test:
+    shifts: 199
+    min_offset_days: 365
+  # Exploratory (counted in `variants`, never used for a detection claim):
+  # all three mechanisms in one model, and a 64-day scale added to each.
+  exploratory:
+    joint_model: true
+    extra_tau_days: 64
