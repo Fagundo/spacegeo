@@ -1,0 +1,7 @@
+# PURPOSE: This file distributes the geomagnetic planetary three-hour index Kp and associated geomagnetic indices
+# (trimmed fixture for tests; a few rows in the published column layout)
+#
+# YYY MM DD  days  days_m  Bsr dB     Kp1    Kp2    Kp3    Kp4    Kp5    Kp6    Kp7    Kp8  ap1  ap2  ap3  ap4  ap5  ap6  ap7  ap8    Ap  SN F10.7obs F10.7adj D
+2015 03 16 30025 30025.5 2477 13  1.333  1.000  0.667  1.000  1.333  2.000  2.333  2.667    5    4    3    4    5    7    9   12     6  77  116.9  119.9 2
+2015 03 17 30026 30026.5 2477 14  2.333  5.333  6.000  6.667  7.667  7.667  7.333  8.000    9   56   80  111  207  207  154  236   132  81  113.7  116.6 2
+2026 11 22 34294 34294.5 2627 18  2.000  1.667  1.333  1.000  0.667 -1.000 -1.000 -1.000    7    6    5    4    3   -1   -1   -1    -1  -1   -1.0   -1.0 0

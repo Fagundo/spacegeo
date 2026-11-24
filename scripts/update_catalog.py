@@ -24,7 +24,7 @@ from spacegeo.data.io.catalog_archive import CatalogArchive
 from spacegeo.data.io.comcat import ComCatReader
 from spacegeo.data.scraping.comcat import ComCatScraper
 from spacegeo.evaluation.anomaly import RegionConfig
-from spacegeo.monitoring.catalog_update import CatalogUpdater
+from spacegeo.monitoring.archive_update import ArchiveUpdater
 from spacegeo.monitoring.config import CatalogsConfig, CatalogSpec
 
 _log = get_logger("update_catalog")
@@ -47,7 +47,7 @@ class CatalogRefresh:
                 _log.info("Updating %s", spec.name)
                 self._updater(spec).update(first_year=self._config.first_year, as_of=as_of)
 
-    def _updater(self, spec: CatalogSpec) -> CatalogUpdater:
+    def _updater(self, spec: CatalogSpec) -> ArchiveUpdater:
         bounds = None
         if spec.region is not None:
             bounds = [b.box for b in self._regions[spec.region].boxes]
@@ -58,7 +58,7 @@ class CatalogRefresh:
             bounds=bounds,
         )
         archive = CatalogArchive(self._project.data_catalog / spec.name)
-        return CatalogUpdater(scraper=scraper, reader=ComCatReader(), archive=archive)
+        return ArchiveUpdater(scraper=scraper, reader=ComCatReader(), archive=archive)
 
 
 def _parse_args() -> argparse.Namespace:

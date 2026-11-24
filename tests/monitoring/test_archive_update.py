@@ -4,8 +4,10 @@ from pathlib import Path
 from spacegeo.common.time import TimeWindow, to_utc
 from spacegeo.data.io.catalog_archive import CatalogArchive
 from spacegeo.data.io.comcat import ComCatReader
+from spacegeo.data.io.gfz_kp import GfzKpReader
+from spacegeo.data.io.yearly_archive import YearlyArchive
 from spacegeo.data.scraping.base import DownloadRequest, Scraper
-from spacegeo.monitoring.catalog_update import CatalogUpdater
+from spacegeo.monitoring.archive_update import ArchiveUpdater
 
 HEADER = "time,latitude,longitude,depth,mag,magType,id\n"
 
@@ -35,7 +37,7 @@ class _FakeScraper(Scraper):
 def test_fetches_missing_then_refreshes_only_recent_years(tmp_path: Path) -> None:
     archive = CatalogArchive(tmp_path / "archive")
     scraper = _FakeScraper(tmp_path / "raw")
-    updater = CatalogUpdater(scraper, ComCatReader(), archive, refresh_years=2)
+    updater = ArchiveUpdater(scraper, ComCatReader(), archive, refresh_years=2)
     as_of = to_utc("2026-04-01T00:00Z")
 
     changed = updater.update(2023, as_of)
@@ -51,5 +53,39 @@ def test_fetches_missing_then_refreshes_only_recent_years(tmp_path: Path) -> Non
 def test_skips_empty_current_year(tmp_path: Path) -> None:
     archive = CatalogArchive(tmp_path / "archive")
     scraper = _FakeScraper(tmp_path / "raw")
-    CatalogUpdater(scraper, ComCatReader(), archive).update(2025, to_utc("2026-01-01T00:00Z"))
+    ArchiveUpdater(scraper, ComCatReader(), archive).update(2025, to_utc("2026-01-01T00:00Z"))
     assert archive.years() == [2025]
+
+
+class _SharedFileScraper(Scraper):
+    """One file covers every year, like the GFZ Kp file."""
+
+    source_name = "shared"
+
+    def __init__(self, raw_dir: Path) -> None:
+        super().__init__(raw_dir, client=self)
+        self.downloads = 0
+
+    def plan(self, window: TimeWindow) -> Sequence[DownloadRequest]:
+        return [DownloadRequest("https://example.org/all.txt", "all.txt")]
+
+    def download(self, url: str, dest: Path) -> None:
+        self.downloads += 1
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(GFZ_FIXTURE.read_text())
+
+
+GFZ_FIXTURE = Path(__file__).parents[1] / "fixtures" / "gfz_kp" / "Kp_ap_Ap_SN_F107_sample.txt"
+
+
+def test_shared_file_downloaded_once_and_time_deduplicated(tmp_path: Path) -> None:
+    reader = GfzKpReader()
+    archive = YearlyArchive(tmp_path / "archive", reader.schema)
+    scraper = _SharedFileScraper(tmp_path / "raw")
+    updater = ArchiveUpdater(scraper, reader, archive, unique_column=None)
+    changed = updater.update(2014, to_utc("2026-11-22T12:00Z"))
+    assert scraper.downloads == 1
+    assert changed == list(range(2014, 2027))  # empty years are stored too
+    assert len(archive.read()) == 8 + 8 + 4  # 2026 clipped at 12:00
+    updater.update(2014, to_utc("2026-11-22T12:00Z"))
+    assert scraper.downloads == 2  # recent years refreshed, still one download

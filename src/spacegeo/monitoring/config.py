@@ -105,3 +105,30 @@ class CatalogsConfig(BaseConfig):
     regions_file: Path
     first_year: int = 2000
     catalogs: tuple[CatalogSpec, ...] = Field(min_length=1)
+
+
+class SpaceWeatherSpec(BaseConfig):
+    """One committed space-weather archive kept current by the weekly workflow.
+
+    Attributes:
+        name: Archive directory under ``data/space_weather/``.
+        source: Registered scraper and reader name (e.g. ``omni2``, ``gfz_kp``).
+    """
+
+    name: str
+    source: str
+
+
+class SpaceWeatherConfig(BaseConfig):
+    """Every space-weather archive the workflow maintains.
+
+    Attributes:
+        first_year: Earliest year kept.
+        refresh_years: Most recent years always re-downloaded (provisional
+            values become definitive over months).
+        sources: The archives.
+    """
+
+    first_year: int = 2000
+    refresh_years: int = Field(default=2, ge=1)
+    sources: tuple[SpaceWeatherSpec, ...] = Field(min_length=1)

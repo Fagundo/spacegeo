@@ -128,9 +128,10 @@ uv run pytest                           # incl. tests/architecture and tests/con
 - `data/raw/` is immutable and gitignored. Only scrapers write to it, and
   they record URL, retrieval time and SHA-256 in `PROVENANCE.json`.
 - `data/processed/` is gitignored and fully regenerable from raw + code.
-- Exception: `data/catalog/` (parsed catalogs, one deterministic `.csv.gz`
-  per year) and `results/anomaly/` are committed, and only by the
-  `weekly-scan` workflow (`scripts/update_catalog.py`,
+- Exception: `data/catalog/` (parsed catalogs), `data/space_weather/`
+  (parsed OMNI2 / GFZ Kp series), each one deterministic `.csv.gz` per
+  year, and `results/anomaly/` are committed, and only by the `weekly-scan`
+  workflow (`scripts/update_catalog.py`, `scripts/update_space_weather.py`,
   `scripts/scan_anomalies.py`). Don't hand-edit them.
 - Otherwise never commit data files, credentials or large binaries.
 - Earthquake catalog: fix a magnitude of completeness (Mc) per era and state
