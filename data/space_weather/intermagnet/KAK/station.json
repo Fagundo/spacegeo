@@ -1,0 +1,8 @@
+{
+  "code": "KAK",
+  "name": "Best-avail minute data in XYZF orientation, provided by Kakioka, Japan (KAK) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": 36.232,
+  "lon_deg": 140.18600000000004,
+  "start": "1991-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T20:24:00+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "code": "MMB",
+  "name": "Best-avail minute data in XYZF orientation, provided by Memambetsu, Japan (MMB) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": 43.91,
+  "lon_deg": 144.19,
+  "start": "1993-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T20:09:00+00:00"
+}

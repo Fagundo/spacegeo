@@ -1,0 +1,8 @@
+{
+  "code": "KDU",
+  "name": "Best-avail minute data in XYZF orientation, provided by Kakadu, Australia (KDU) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": -12.689999999999998,
+  "lon_deg": 132.47000000000003,
+  "start": "2000-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T20:53:00+00:00"
+}

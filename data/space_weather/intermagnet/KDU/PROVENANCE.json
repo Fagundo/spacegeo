@@ -1,0 +1,164 @@
+[
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2000-01-01T00:00:00Z&stop=2000-02-01T00:00:00Z&format=csv",
+    "filename": "2000.csv.gz",
+    "sha256": "9d4fa5c0fb2362b18c75ea4c0ad72b0667e4fa5c17c674ba9e8ca69112bd8201",
+    "retrieved_at": "2026-11-24T20:59:35.031546+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2001-01-01T00:00:00Z&stop=2001-02-01T00:00:00Z&format=csv",
+    "filename": "2001.csv.gz",
+    "sha256": "f47ba1f799f46812989abfbbfa684e06de03d6b8886d37193843db4231792500",
+    "retrieved_at": "2026-11-24T21:00:26.749644+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2002-01-01T00:00:00Z&stop=2002-02-01T00:00:00Z&format=csv",
+    "filename": "2002.csv.gz",
+    "sha256": "cb5e10251ef5dd81315adef117adce0224db8b1246600a97486d6d6e32ce576c",
+    "retrieved_at": "2026-11-24T21:01:11.637107+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2003-01-01T00:00:00Z&stop=2003-02-01T00:00:00Z&format=csv",
+    "filename": "2003.csv.gz",
+    "sha256": "ee6907543b5a9933a5c56b10a0b2841ec178b9479226d193e9558002bd1392bc",
+    "retrieved_at": "2026-11-24T21:02:02.900507+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2004-01-01T00:00:00Z&stop=2004-02-01T00:00:00Z&format=csv",
+    "filename": "2004.csv.gz",
+    "sha256": "b225ed0f953ba5b7dedb7bd071453572fbac3240fce0ef9d0d25e38aee48ad4b",
+    "retrieved_at": "2026-11-24T21:02:48.686746+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2005-01-01T00:00:00Z&stop=2005-02-01T00:00:00Z&format=csv",
+    "filename": "2005.csv.gz",
+    "sha256": "4a5bca095e7e6c6c498b5c4d272951d0be9cc6b4f2c9c7496d59f3b5a051447e",
+    "retrieved_at": "2026-11-24T21:03:31.485638+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2006-01-01T00:00:00Z&stop=2006-02-01T00:00:00Z&format=csv",
+    "filename": "2006.csv.gz",
+    "sha256": "f2866f27d9a9385b80fdc9a6cac3ec30bdaf8dbbf20c6d3dff02790a6c5240ec",
+    "retrieved_at": "2026-11-24T21:04:21.453852+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2007-01-01T00:00:00Z&stop=2007-02-01T00:00:00Z&format=csv",
+    "filename": "2007.csv.gz",
+    "sha256": "1e2398a06bc4ac08487715678bc7c47fb02e0e3e33df22d7470b3ceca3ea5de3",
+    "retrieved_at": "2026-11-24T21:05:20.063185+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2008-01-01T00:00:00Z&stop=2008-02-01T00:00:00Z&format=csv",
+    "filename": "2008.csv.gz",
+    "sha256": "38f08adb49c7c79aca1d409eb637d55b31d14905db520750c5c3c0b3c11f1214",
+    "retrieved_at": "2026-11-24T21:06:04.791563+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2009-01-01T00:00:00Z&stop=2009-02-01T00:00:00Z&format=csv",
+    "filename": "2009.csv.gz",
+    "sha256": "ebc5aca6c00c5224a62947fe7a5d3894297a3c37d169d5eabe5b814d2a0c5dc4",
+    "retrieved_at": "2026-11-24T21:06:47.314230+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2010-01-01T00:00:00Z&stop=2010-02-01T00:00:00Z&format=csv",
+    "filename": "2010.csv.gz",
+    "sha256": "be7dcd38cb4a14601be2b95585946509e102372fc0512b683eca807980525d5e",
+    "retrieved_at": "2026-11-24T21:07:33.679293+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2011-01-01T00:00:00Z&stop=2011-02-01T00:00:00Z&format=csv",
+    "filename": "2011.csv.gz",
+    "sha256": "ea11cf814a60e4aeac3eaff3b35eb3e4a80605f60682f42c74b7b2cdc079ec04",
+    "retrieved_at": "2026-11-24T21:08:31.819674+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2012-01-01T00:00:00Z&stop=2012-02-01T00:00:00Z&format=csv",
+    "filename": "2012.csv.gz",
+    "sha256": "99042f27c55bb6d87512804e1d535c821472cdec30369ec9f37ff55b05673a65",
+    "retrieved_at": "2026-11-24T21:09:18.594725+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2013-01-01T00:00:00Z&stop=2013-02-01T00:00:00Z&format=csv",
+    "filename": "2013.csv.gz",
+    "sha256": "be640b45bfcc1eba5ac7b5956831f471d9c770f6f67f0e36a6438fb01e54dbce",
+    "retrieved_at": "2026-11-24T21:10:02.069355+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2014-01-01T00:00:00Z&stop=2014-02-01T00:00:00Z&format=csv",
+    "filename": "2014.csv.gz",
+    "sha256": "f5d5cc6653dbd7c63cf70681d7b78daf4608a37d1b440404518e946c3149ca25",
+    "retrieved_at": "2026-11-24T21:10:52.766993+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2015-01-01T00:00:00Z&stop=2015-02-01T00:00:00Z&format=csv",
+    "filename": "2015.csv.gz",
+    "sha256": "ed8b232e9205c3f348b9bdead0dcc22fe072b1260321e99a9026fa092784f9c7",
+    "retrieved_at": "2026-11-24T21:11:48.907792+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2016-01-01T00:00:00Z&stop=2016-02-01T00:00:00Z&format=csv",
+    "filename": "2016.csv.gz",
+    "sha256": "c716d286207600192463c7a2d2ccf798c7f7e8ff83b2464535b427f02b263abe",
+    "retrieved_at": "2026-11-24T21:12:41.691919+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2017-01-01T00:00:00Z&stop=2017-02-01T00:00:00Z&format=csv",
+    "filename": "2017.csv.gz",
+    "sha256": "2b14587a0da5f768433b2d1e74ca92a013a034305f4c1e05b302dcba7846c48a",
+    "retrieved_at": "2026-11-24T21:13:29.134180+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2018-01-01T00:00:00Z&stop=2018-02-01T00:00:00Z&format=csv",
+    "filename": "2018.csv.gz",
+    "sha256": "d1663d68d7548e93a6bd19e7799794e6b68c36ca1ed17efcf920e1129d2d5fb9",
+    "retrieved_at": "2026-11-24T21:14:21.132951+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2019-01-01T00:00:00Z&stop=2019-02-01T00:00:00Z&format=csv",
+    "filename": "2019.csv.gz",
+    "sha256": "2bdd7c11bbe8d5ffe9a180c423729b8c36d5f7ca93f292ed734029ae15cea8a1",
+    "retrieved_at": "2026-11-24T21:15:04.300319+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2020-01-01T00:00:00Z&stop=2020-02-01T00:00:00Z&format=csv",
+    "filename": "2020.csv.gz",
+    "sha256": "400c4ee49930dba09d56674d975222b608b0d9b6234b7b70523bd6ebcb391d70",
+    "retrieved_at": "2026-11-24T21:15:48.847882+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2021-01-01T00:00:00Z&stop=2021-02-01T00:00:00Z&format=csv",
+    "filename": "2021.csv.gz",
+    "sha256": "a65ab285be12ad6fc16e6e8f759d8f1d29b3c55b07bfd932230700135702599a",
+    "retrieved_at": "2026-11-24T21:16:37.674851+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2022-01-01T00:00:00Z&stop=2022-02-01T00:00:00Z&format=csv",
+    "filename": "2022.csv.gz",
+    "sha256": "4d9cc30f2ee983c5ef6056bbc2bc8f14fc61228d4c19963624fc9108b3561be4",
+    "retrieved_at": "2026-11-24T21:17:30.938472+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2023-01-01T00:00:00Z&stop=2023-02-01T00:00:00Z&format=csv",
+    "filename": "2023.csv.gz",
+    "sha256": "e5c6163a76789b76942236762d4a3877e0a8ccc9292599cd051c8adb615ed981",
+    "retrieved_at": "2026-11-24T21:18:10.445740+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2024-01-01T00:00:00Z&stop=2024-02-01T00:00:00Z&format=csv",
+    "filename": "2024.csv.gz",
+    "sha256": "1672a460bc830fe7808e8a15b713aa198b8fbf011b7b591bf73fdc01fc4bef6a",
+    "retrieved_at": "2026-11-24T21:18:52.344255+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2025-01-01T00:00:00Z&stop=2025-02-01T00:00:00Z&format=csv",
+    "filename": "2025.csv.gz",
+    "sha256": "6fa90fb4080b6a9c5d011535f335bb0b4a4e38fd8ae4a7e2350cc5439a3e0dcc",
+    "retrieved_at": "2026-11-24T21:19:34.370068+00:00"
+  },
+  {
+    "url": "https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=kdu/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2026-01-01T00:00:00Z&stop=2026-02-01T00:00:00Z&format=csv",
+    "filename": "2026.csv.gz",
+    "sha256": "981e7cc57dc5d3368b5f47fcef15ee090004b645d8f28378f82bee75aec89ddc",
+    "retrieved_at": "2026-11-24T21:20:20.893919+00:00"
+  }
+]

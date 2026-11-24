@@ -1,0 +1,8 @@
+{
+  "code": "FRN",
+  "name": "Best-avail minute data in XYZF orientation, provided by Fresno, USA (FRN) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": 37.09,
+  "lon_deg": -119.72000000000003,
+  "start": "1991-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T19:57:00+00:00"
+}

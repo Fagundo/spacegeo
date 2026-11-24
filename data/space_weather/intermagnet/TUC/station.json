@@ -1,0 +1,8 @@
+{
+  "code": "TUC",
+  "name": "Best-avail minute data in XYZF orientation, provided by Tucson, USA (TUC) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": 32.17,
+  "lon_deg": -110.73000000000002,
+  "start": "1991-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T20:09:00+00:00"
+}

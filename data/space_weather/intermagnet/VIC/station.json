@@ -1,0 +1,8 @@
+{
+  "code": "VIC",
+  "name": "Best-avail minute data in XYZF orientation, provided by Victoria, Canada (VIC) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": 48.52,
+  "lon_deg": -123.41999999999996,
+  "start": "1991-01-01T00:00:00+00:00",
+  "stop": "2026-11-23T19:55:00+00:00"
+}

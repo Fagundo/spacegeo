@@ -1,0 +1,8 @@
+{
+  "code": "EYR",
+  "name": "Best-avail minute data in XYZF orientation, provided by Eyrewell, New Zealand (EYR) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": -43.47399999999999,
+  "lon_deg": 172.39300000000003,
+  "start": "1994-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T19:59:00+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "code": "SHU",
+  "name": "Best-avail minute data in XYZF orientation, provided by Shumagin, USA (SHU) observatory. See https://intermagnet.org/faq/10.geomagnetic-comp.html for a description of the Geomagnetic orientation used in this data.",
+  "lat_deg": 55.35,
+  "lon_deg": -160.46000000000004,
+  "start": "2005-01-01T00:00:00+00:00",
+  "stop": "2026-11-24T19:33:00+00:00"
+}
