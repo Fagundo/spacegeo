@@ -3,7 +3,8 @@ name: Magnetometers
 # Downloads INTERMAGNET 1-minute data for the observatories in
 # configs/magnetometers.yaml, reduces it to hourly horizontal dB/dt and commits
 # data/space_weather/intermagnet/. One parallel job per station (the first
-# backfill is ~20 MB of minute data per station-year); a final job commits.
+# backfill is ~20 MB of minute data per station-year, fetched month by month); a
+# final job commits.
 # Monthly, because reported data become definitive slowly and the archive is
 # for research, not the weekly scan.
 
@@ -39,7 +40,7 @@ jobs:
     timeout-minutes: 300
     strategy:
       fail-fast: false
-      max-parallel: 4 # be gentle with the BGS service
+      max-parallel: 3 # be gentle with the BGS service
       matrix:
         station: ${{ fromJson(needs.plan.outputs.stations) }}
     steps:
