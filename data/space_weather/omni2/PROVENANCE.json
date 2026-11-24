@@ -1,0 +1,164 @@
+[
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2000.dat",
+    "filename": "2000.csv.gz",
+    "sha256": "65fc532124f44d3fc8bd72e311c7109358815e0f5ed78cacf76fb983e617f368",
+    "retrieved_at": "2026-11-24T02:47:39.565598+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2001.dat",
+    "filename": "2001.csv.gz",
+    "sha256": "55a763ecfea381a79f7df47745ad9ace3f9210a25f04e80ed4405b1a8dfcf1ef",
+    "retrieved_at": "2026-11-24T02:47:40.756172+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2002.dat",
+    "filename": "2002.csv.gz",
+    "sha256": "4198648b4815b9697227d2dceefaf9f69ed7c36d69d485f99abf91e78f749289",
+    "retrieved_at": "2026-11-24T02:47:41.875489+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2003.dat",
+    "filename": "2003.csv.gz",
+    "sha256": "f1263c8501a1e61c4cff570a3d56c01acae320688a0ddc5a32587e7e93983ef5",
+    "retrieved_at": "2026-11-24T02:47:43.066485+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2004.dat",
+    "filename": "2004.csv.gz",
+    "sha256": "ebb4e19f85657e2939b686689cc989e30c552b464b32e947a7141a853f4d1fbf",
+    "retrieved_at": "2026-11-24T02:47:44.274481+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2005.dat",
+    "filename": "2005.csv.gz",
+    "sha256": "868b873a75299b02904cdd3ad25e41628090439aacd0854217718cfa0b712798",
+    "retrieved_at": "2026-11-24T02:47:45.475765+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2006.dat",
+    "filename": "2006.csv.gz",
+    "sha256": "955cf3aab2c558bfed525d0ccae789222b321e60d7b0fcf78f00b7715a650aae",
+    "retrieved_at": "2026-11-24T02:47:46.663427+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2007.dat",
+    "filename": "2007.csv.gz",
+    "sha256": "e9a958a246bb318036cd4f02718f7d3255f87fb24e44848f9795d283af5a6d08",
+    "retrieved_at": "2026-11-24T02:47:47.798883+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2008.dat",
+    "filename": "2008.csv.gz",
+    "sha256": "0a138d051af78a6075316c636bfd8eeba0f2c317e3d86e926db093c547027981",
+    "retrieved_at": "2026-11-24T02:47:48.919975+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2009.dat",
+    "filename": "2009.csv.gz",
+    "sha256": "f102c6c25c72a93d554eead609ea2ef69dccbbd841da70e7430f9d7951315566",
+    "retrieved_at": "2026-11-24T02:47:50.050289+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2010.dat",
+    "filename": "2010.csv.gz",
+    "sha256": "6bcd955db556fa641041b82ec170b6a32d6c4e26112624eb33dfd998995784d6",
+    "retrieved_at": "2026-11-24T02:47:51.167246+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2011.dat",
+    "filename": "2011.csv.gz",
+    "sha256": "1f5032475c4fa2d39dcc08dfeba26d22c9e2c9db1b68b4822b958d74101f3459",
+    "retrieved_at": "2026-11-24T02:47:52.283054+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2012.dat",
+    "filename": "2012.csv.gz",
+    "sha256": "b800f937bfe7567e84a76f5ace9e4608537e339257cb06f9f5ee932ee0d2ef6b",
+    "retrieved_at": "2026-11-24T02:47:53.535582+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2013.dat",
+    "filename": "2013.csv.gz",
+    "sha256": "a617622a6c8bed83c06ff48aa4e25466759b4cfbb8f82f6e27a9b8eeb7b23805",
+    "retrieved_at": "2026-11-24T02:47:54.667096+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2014.dat",
+    "filename": "2014.csv.gz",
+    "sha256": "539eb0ed2fcd18e2a8986d48e8061132364ef954d2bf8a9605e3b3102f84e18c",
+    "retrieved_at": "2026-11-24T02:47:56.103234+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2015.dat",
+    "filename": "2015.csv.gz",
+    "sha256": "7cc51ed7dc5cc102a4a5ac8279ef22437f9641e5e920ef76b2fd5c93a9789abe",
+    "retrieved_at": "2026-11-24T02:47:57.223225+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2016.dat",
+    "filename": "2016.csv.gz",
+    "sha256": "055186657ed1585a50665844a246831d8d28c9bda816d5764ca35f4e9050e578",
+    "retrieved_at": "2026-11-24T02:47:58.337855+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2017.dat",
+    "filename": "2017.csv.gz",
+    "sha256": "e83d629df9fa8f898d89f3aedc30b75816b7ec543d258f73cc4742a29f0833fe",
+    "retrieved_at": "2026-11-24T02:47:59.532993+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2018.dat",
+    "filename": "2018.csv.gz",
+    "sha256": "d4d8194e69d88de442d1a782f952e39d4d9d0adb690327ec9394f0fc12d99897",
+    "retrieved_at": "2026-11-24T02:48:00.767628+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2019.dat",
+    "filename": "2019.csv.gz",
+    "sha256": "f6a07150f22464aa863b183bf8c42a1fcf0be23247bd41aa1cdcb77a38992b11",
+    "retrieved_at": "2026-11-24T02:48:02.024470+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2020.dat",
+    "filename": "2020.csv.gz",
+    "sha256": "1e5a75b504781b7fda5ac0995a03146fb34fdc1b3e81a4a1a945eea5e684b162",
+    "retrieved_at": "2026-11-24T02:48:03.219385+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2021.dat",
+    "filename": "2021.csv.gz",
+    "sha256": "9c998c51fee09bb06eb8bb3efaf810013d7272edc23a83785d52db8049e0801c",
+    "retrieved_at": "2026-11-24T02:48:04.456037+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2022.dat",
+    "filename": "2022.csv.gz",
+    "sha256": "05125384b746225add335bf1fcf48d684c9ad44907f9430f55ac2a4bafec7262",
+    "retrieved_at": "2026-11-24T02:48:05.600442+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2023.dat",
+    "filename": "2023.csv.gz",
+    "sha256": "7d51a940f904a16fc11b97c616b0b51c7f5d549b599ad17911fd108b427b5cd1",
+    "retrieved_at": "2026-11-24T02:48:06.726318+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2024.dat",
+    "filename": "2024.csv.gz",
+    "sha256": "7ab8d52163eb00baf31e73e65d8d46fcad9f33d91d238ae788ba35084555b247",
+    "retrieved_at": "2026-11-24T02:48:07.837255+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2025.dat",
+    "filename": "2025.csv.gz",
+    "sha256": "3758482b66d2f09084d7fb32ac44bf4aa3ad5d5f236c0615327c9b3cc71c0ce7",
+    "retrieved_at": "2026-11-24T02:48:08.963353+00:00"
+  },
+  {
+    "url": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_2026.dat",
+    "filename": "2026.csv.gz",
+    "sha256": "1d52ddbbc18a826aabe0d6e1393acda66151aa8703028ba9eed4299dd5daef2c",
+    "retrieved_at": "2026-11-24T02:48:10.144115+00:00"
+  }
+]

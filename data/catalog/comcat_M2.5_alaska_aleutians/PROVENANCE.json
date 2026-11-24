@@ -160,5 +160,17 @@
     "filename": "2026.csv.gz",
     "sha256": "0500f59effe2f6b73199eae188cdaff0c167307b29f6a7c4a47862c0567a8336",
     "retrieved_at": "2026-11-23T23:18:58.044737+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2025-01-01T00%3A00%3A00&endtime=2025-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=50&maxlatitude=65&minlongitude=165&maxlongitude=225",
+    "filename": "2025.csv.gz",
+    "sha256": "a763c837e3b10ab56e8a36f5ebd6d74824ed2f9be4b8a2d267ce02f7091df038",
+    "retrieved_at": "2026-11-24T02:47:31.966074+00:00"
+  },
+  {
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&eventtype=earthquake&orderby=time-asc&starttime=2026-01-01T00%3A00%3A00&endtime=2026-04-01T00%3A00%3A00&minmagnitude=2.5&limit=20000&minlatitude=50&maxlatitude=65&minlongitude=165&maxlongitude=225",
+    "filename": "2026.csv.gz",
+    "sha256": "79d016216e55aefdc6997f4539788e114f693afd7de7d4b3cb03dafcf9548f92",
+    "retrieved_at": "2026-11-24T02:47:33.557495+00:00"
   }
 ]
