@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from itertools import pairwise
 
 import numpy as np
@@ -25,6 +26,26 @@ _BOUNDS = [(-12, 8), (-12, 3), (-4, 1.5), (-12, 1), (-7, 1), (-5, 12), (-5, 1.5)
 
 def _span(window: TimeWindow) -> tuple[float, float]:
     return (window.start - EPOCH) / duration(days=1), (window.end - EPOCH) / duration(days=1)
+
+
+@dataclass(frozen=True)
+class EtasComponents:
+    """A fitted ETAS intensity split into background and triggered parts at each event.
+
+    Lets other models change the background (e.g. a time-varying multiplier)
+    while keeping the triggering of a fitted ETAS model fixed.
+
+    Attributes:
+        times: Event times, days since :data:`EPOCH`, time-sorted.
+        background: Background intensity mu * u(x) at each event, per day per km^2.
+        triggered: Triggered intensity at each event, per day per km^2.
+        mu: Background rate over the whole region, events per day.
+    """
+
+    times: npt.NDArray[np.float64]
+    background: npt.NDArray[np.float64]
+    triggered: npt.NDArray[np.float64]
+    mu: float
 
 
 @FORECAST_MODELS.register("etas")
@@ -130,6 +151,22 @@ class EtasModel(ForecastModel):
             compensator = fraction * lik.integral(self.parameters, t0, t1)
             out[i] = float(logs[inside].sum()) - compensator
         return out
+
+    def components(self, data: ModelData) -> EtasComponents:
+        """Background and triggered intensity at each event in ``data.window``.
+
+        All earlier events in ``data`` act as parents.
+        """
+        self._require_fitted()
+        catalog = EtasCatalog.from_frame(data.events, self._region, self._settings)
+        lik = self._likelihood(catalog, _span(data.window))
+        total, background = lik.intensities(self.parameters)
+        return EtasComponents(
+            times=catalog.t[lik.targets],
+            background=background,
+            triggered=total - background,
+            mu=self.parameters.mu,
+        )
 
     def rescaled_times(self, data: ModelData) -> npt.NDArray[np.float64]:
         """Compensator Lambda(t_i) at each event in ``data.window`` (time rescaling).

@@ -33,6 +33,11 @@ from spacegeo.training.small_trigger import (
     SmallTriggerExperiment,
     SmallTriggerReport,
 )
+from spacegeo.training.space_weather_etas import (
+    SpaceWeatherEtasConfig,
+    SpaceWeatherEtasExperiment,
+)
+from spacegeo.training.space_weather_report import SpaceWeatherEtasReport
 
 _log = get_logger("spacegeo")
 
@@ -44,6 +49,8 @@ class _Runner:
     config: type[ValidationExperimentConfig]
     experiment: Callable[..., Any]
     report: Callable[[], Any]
+    inputs: Callable[[Path, Any], dict[str, Any]] | None = None
+    """Loads extra experiment inputs (e.g. space weather) from the repo root."""
 
 
 _RUNNERS: dict[str, _Runner] = {
@@ -51,6 +58,12 @@ _RUNNERS: dict[str, _Runner] = {
     "small_trigger_etas": _Runner(SmallTriggerConfig, SmallTriggerExperiment, SmallTriggerReport),
     "anomaly_followup": _Runner(
         AnomalyFollowupConfig, AnomalyFollowupExperiment, AnomalyFollowupReport
+    ),
+    "space_weather_etas": _Runner(
+        SpaceWeatherEtasConfig,
+        SpaceWeatherEtasExperiment,
+        SpaceWeatherEtasReport,
+        SpaceWeatherEtasExperiment.load_inputs,
     ),
 }
 
@@ -83,7 +96,8 @@ class Cli:
         catalog = pd.concat(frames).sort_index()
         catalog = catalog.loc[~catalog["event_id"].duplicated(keep="last")]
         run = RunDirectory(project.runs, config_path.stem.replace("_", "-"), git, config.seed)
-        result = runner.experiment(config, regions, catalog).run()
+        extra = runner.inputs(project.root, config) if runner.inputs else {}
+        result = runner.experiment(config, regions, catalog, **extra).run()
         runner.report().write(run, config, result)
         _log.info("Wrote %s\n%s", run.path, (run.path / "NOTES.md").read_text())
         return 0

@@ -122,3 +122,22 @@ def holm(p_values: npt.ArrayLike) -> npt.NDArray[np.float64]:
     adjusted = np.empty(n)
     adjusted[order] = np.clip(scaled, 0.0, 1.0)
     return adjusted
+
+
+def ratio_of_sums_samples(
+    numerator: npt.ArrayLike, denominator: npt.ArrayLike, indices: npt.NDArray[np.int64]
+) -> npt.NDArray[np.float64]:
+    """Bootstrap samples of ``sum(numerator) / sum(denominator)`` over resampled rows.
+
+    Args:
+        numerator: Array whose first axis is time (e.g. weeks x regions).
+        denominator: Same shape (e.g. event counts).
+        indices: Resampled row positions, shape ``(n_resamples, n_rows)``.
+
+    Returns:
+        One ratio per resample (denominator floored at 1).
+    """
+    num = np.asarray(numerator, dtype=np.float64)
+    den = np.asarray(denominator, dtype=np.float64)
+    axes = tuple(range(1, num.ndim + 1))
+    return num[indices].sum(axis=axes) / np.maximum(den[indices].sum(axis=axes), 1.0)
