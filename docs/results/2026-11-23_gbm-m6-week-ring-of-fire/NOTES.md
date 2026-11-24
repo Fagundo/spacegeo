@@ -1,3 +1,5 @@
+> **Code removed (2026-11-23).** The gradient-boosting experiment was removed from the repo to keep it simple, after this null result. This record stays because every variant tried is reported. To reproduce, check out commit c572641 (see `git.txt`) and run `configs/gbm_m6_week_ring_of_fire.yaml`.
+
 # Weekly M>=6 forecast: gradient boosting vs. ETAS
 
 Hypothesis: A gradient-boosted tree model (scikit-learn HistGradientBoosting, the XGBoost family) using seismicity-history features plus the ETAS forecast gives better probabilities for "at least one M>=6.0 in the region during the coming Monday-to-Monday week" than the ETAS forecast alone, recalibrated by logistic regression on the training span.

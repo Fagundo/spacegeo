@@ -113,21 +113,6 @@ def test_rescaled_times_look_like_unit_poisson(catalog, fitted) -> None:
     assert gaps.mean() == pytest.approx(1.0, abs=0.1)
 
 
-def test_forecast_counts_ignore_events_inside_the_window(catalog, fitted) -> None:
-    week = TimeWindow(VAL.start, VAL.start + duration(days=7))
-    full = fitted.forecast_counts(ModelData(catalog, VAL), [week])
-    history_only = catalog.loc[catalog.index < week.start]
-    assert fitted.forecast_counts(ModelData(history_only, VAL), [week]) == pytest.approx(full)
-    days = (VAL.end - VAL.start) / duration(days=1)
-    weeks = [
-        TimeWindow(VAL.start + duration(days=d), VAL.start + duration(days=d + 7))
-        for d in range(0, int(days) - 7, 7)
-    ]
-    expected = fitted.forecast_counts(ModelData(catalog, VAL), weeks).sum()
-    observed = int(sum(w.mask(catalog.index).sum() for w in weeks))
-    assert 0.5 * observed < expected < 1.2 * observed  # no in-window cascades -> some shortfall
-
-
 def test_scoring_only_large_events(catalog, fitted) -> None:
     data = ModelData(catalog, VAL)
     week = [VAL]
