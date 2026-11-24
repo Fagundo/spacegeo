@@ -11,6 +11,10 @@ from spacegeo.data.io.omni import OmniReader
 FIXTURE = Path(__file__).parents[2] / "fixtures" / "omni2" / "omni2_2015.dat"
 
 
+def _row(df: pd.DataFrame, when: str) -> dict[str, float]:
+    return {str(k): float(v) for k, v in df.loc[[to_utc(when)]].to_dict("records")[0].items()}
+
+
 def test_parses_sorted_hourly_utc_index() -> None:
     df = OmniReader().read([FIXTURE])
     index = pd.DatetimeIndex(df.index)
@@ -26,7 +30,7 @@ def test_parses_sorted_hourly_utc_index() -> None:
 
 
 def test_storm_hour_values_and_kp_thirds() -> None:
-    row = OmniReader().read([FIXTURE]).loc[to_utc("2015-03-17T12:00Z")]
+    row = _row(OmniReader().read([FIXTURE]), "2015-03-17T12:00Z")
     assert row["bz_gsm_nT"] == pytest.approx(-20.3)
     assert row["speed_km_s"] == pytest.approx(561.0)
     assert row["dst_nT"] == pytest.approx(-151.0)
@@ -35,11 +39,11 @@ def test_storm_hour_values_and_kp_thirds() -> None:
 
 def test_fill_values_become_nan() -> None:
     df = OmniReader().read([FIXTURE])
-    gap = df.loc[to_utc("2015-03-17T13:00Z")]
+    gap = _row(df, "2015-03-17T13:00Z")
     for column in ("bz_gsm_nT", "speed_km_s", "density_cm3", "pdyn_nPa", "temperature_K"):
         assert np.isnan(gap[column]), column
     assert gap["dst_nT"] == pytest.approx(-40.0)
-    last = df.loc[to_utc("2015-12-31T23:00Z")]
+    last = _row(df, "2015-12-31T23:00Z")
     assert np.isnan(last["kp"])
     assert np.isnan(last["dst_nT"])
 
