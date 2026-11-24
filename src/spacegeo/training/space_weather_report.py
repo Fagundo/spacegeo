@@ -129,7 +129,7 @@ class SpaceWeatherEtasReport:
                 f"## Variants (gain in nats/event over ETAS, validation "
                 f"{config.val_start:%Y-%m-%d} to {config.val_end:%Y-%m-%d})",
                 "",
-                markdown_table(table.loc[:, cols].round(4), index_name="variant"),
+                markdown_table(table.loc[:, cols].round(6), index_name="variant"),
                 "",
                 "## Rate change per 1 sd of each covariate (training fit, 95% interval)",
                 "",
@@ -152,7 +152,7 @@ class SpaceWeatherEtasReport:
                 "",
                 "## Per region",
                 "",
-                markdown_table(result.per_region.round(4), index_name="region"),
+                markdown_table(result.per_region.round(6), index_name="region"),
                 "",
             ]
         )
