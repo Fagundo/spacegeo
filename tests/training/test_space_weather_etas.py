@@ -102,7 +102,8 @@ def test_null_run_reports_without_detection(
     assert table["p_shift"].iloc[2:].isna().all()
     assert set(result.shift_null) == {"compression", "variability"}
     assert len(result.shift_null["compression"]) == 19
-    assert result.per_region.loc["high_lat", "geomagnetic_lat_deg"] > 40
+    maglat = result.per_region["geomagnetic_lat_deg"].to_numpy(dtype=np.float64)
+    assert maglat[list(REGIONS).index("high_lat")] > 40
     assert result.weekly["n"].to_numpy().sum() == result.per_region["n_val"].to_numpy().sum() * 5
 
     run = RunDirectory(tmp_path, "sw-test", GitState(commit="abc", dirty=False), seed=0)
