@@ -1,0 +1,53 @@
+# Do weekly anomaly flags precede M>=7 mainshocks?
+# Run: uv run spacegeo run configs/anomaly_followup.yaml
+#
+# Implements docs/experiments/anomaly-followup.md, which was written before any
+# real-data scan was run; definitions copied unchanged. This config was written
+# 2026-11-23, before the flags were compared with any outcome.
+#
+# Deviations and disclosures:
+# - The scan now uses the v2 regions (disjoint boxes; changed for double
+#   counting, before this test was run). Flags come from the workflow's v2
+#   validation run (results/anomaly/validation, config.yaml stored alongside).
+# - Seen beforehand: the number of validation flags per test (14 excess each,
+#   1 deficit) and the 2026 (test-span) flags in the weekly report. No outcome
+#   for any validation week was looked at.
+# - Base rates are reported for training and validation only; the test-span
+#   confirmation waits for two full years of 2026+ data, as pre-registered.
+prereg:
+  hypothesis: >-
+    A region-week flagged excess by the mainshocks test is followed by an
+    M>=7.0 mainshock (causal Gardner-Knopoff) in the same region within 30
+    days after the week ends more often than an unflagged region-week.
+  comparison: >-
+    Unflagged validation region-weeks (same regions, same weeks).
+  metric: >-
+    Relative risk P(target | flag) / P(target | no flag) with a 95%
+    moving-block bootstrap interval over weeks (13-week blocks); Brier skill
+    score of the two-level forecast against the base rate (in-sample).
+  success: >-
+    Primary: lower bound of the relative-risk interval > 1. Secondary,
+    Holm-corrected together: activity excess flags; deficit flags for either
+    test; 60-day horizon.
+  data: >-
+    Flags: results/anomaly/validation/weekly.csv.gz (scan models fitted on
+    2000-2019). Targets: USGS ComCat M>=4.5 (data/catalog/comcat_M4.5),
+    causal Gardner-Knopoff declustering over 2000 onward, M>=7.0 mainshocks
+    inside the same region. Events inside the flagged week do not count.
+    Region-weeks whose horizon would reach past 2026-01-01 are dropped, so
+    no outcome comes from the test span.
+  variants: 1
+experiment: anomaly_followup
+regions_file: configs/ring_of_fire_scan.yaml
+catalog: data/catalog/comcat_M4.5
+flags_file: results/anomaly/validation/weekly.csv.gz
+mc: 4.5
+target_magnitude: 7.0
+horizon_days: 30
+secondary_horizon_days: 60
+train_start: "2000-01-01T00:00:00Z"
+val_start: "2020-01-01T00:00:00Z"
+val_end: "2026-01-01T00:00:00Z"
+bootstrap_block_weeks: 13
+bootstrap_resamples: 2000
+seed: 0

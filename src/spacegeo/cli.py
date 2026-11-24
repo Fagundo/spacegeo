@@ -17,6 +17,11 @@ from spacegeo.common.paths import ProjectPaths
 from spacegeo.common.run import GitState, RunDirectory
 from spacegeo.data.io.catalog_archive import CatalogArchive
 from spacegeo.evaluation.anomaly import RegionConfig
+from spacegeo.training.anomaly_followup import (
+    AnomalyFollowupConfig,
+    AnomalyFollowupExperiment,
+    AnomalyFollowupReport,
+)
 from spacegeo.training.etas_baseline import (
     EtasBaselineExperiment,
     EtasExperimentConfig,
@@ -47,6 +52,9 @@ _RUNNERS: dict[str, _Runner] = {
     "etas_baseline": _Runner(EtasExperimentConfig, EtasBaselineExperiment, EtasBaselineReport),
     "event_forecast": _Runner(EventForecastConfig, EventForecastExperiment, EventForecastReport),
     "small_trigger_etas": _Runner(SmallTriggerConfig, SmallTriggerExperiment, SmallTriggerReport),
+    "anomaly_followup": _Runner(
+        AnomalyFollowupConfig, AnomalyFollowupExperiment, AnomalyFollowupReport
+    ),
 }
 
 

@@ -1,0 +1,39 @@
+prereg:
+  hypothesis: A region-week flagged excess by the mainshocks test is followed by an
+    M>=7.0 mainshock (causal Gardner-Knopoff) in the same region within 30 days after
+    the week ends more often than an unflagged region-week.
+  comparison: Unflagged validation region-weeks (same regions, same weeks).
+  metric: Relative risk P(target | flag) / P(target | no flag) with a 95% moving-block
+    bootstrap interval over weeks (13-week blocks); Brier skill score of the two-level
+    forecast against the base rate (in-sample).
+  success: 'Primary: lower bound of the relative-risk interval > 1. Secondary, Holm-corrected
+    together: activity excess flags; deficit flags for either test; 60-day horizon.'
+  data: 'Flags: results/anomaly/validation/weekly.csv.gz (scan models fitted on 2000-2019).
+    Targets: USGS ComCat M>=4.5 (data/catalog/comcat_M4.5), causal Gardner-Knopoff
+    declustering over 2000 onward, M>=7.0 mainshocks inside the same region. Events
+    inside the flagged week do not count. Region-weeks whose horizon would reach past
+    2026-01-01 are dropped, so no outcome comes from the test span.'
+  variants: 1
+regions_file: configs/ring_of_fire_scan.yaml
+catalog: data/catalog/comcat_M4.5
+mc: 4.5
+train_start: '2000-01-01T00:00:00Z'
+val_start: '2020-01-01T00:00:00Z'
+val_end: '2026-01-01T00:00:00Z'
+week_anchor: W-MON
+bootstrap_block_weeks: 13
+bootstrap_resamples: 2000
+seed: 0
+etas:
+  t_max_days: 365.0
+  r_max_km: 300.0
+  burn_in_days: 365.0
+  iterations: 5
+  tolerance: 0.02
+extra_catalogs: []
+experiment: anomaly_followup
+flags_file: results/anomaly/validation/weekly.csv.gz
+target_magnitude: 7.0
+horizon_days: 30.0
+secondary_horizon_days: 60.0
+week_days: 7.0
