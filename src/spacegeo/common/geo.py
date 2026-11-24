@@ -101,6 +101,33 @@ class GeoPoint:
 
 MAX_ABS_LONGITUDE_DEG = 180.0
 
+GEOMAGNETIC_POLE_DEG = (80.65, -72.68)
+"""Northern geomagnetic (centred-dipole) pole, IGRF-13 epoch 2020: (lat, lon)."""
+
+
+def unit_vectors(lat_deg: npt.ArrayLike, lon_deg: npt.ArrayLike) -> npt.NDArray[np.float64]:
+    """Earth-centred unit vectors, shape ``(n, 3)``, for points in degrees."""
+    lat = np.radians(np.atleast_1d(np.asarray(lat_deg, dtype=np.float64)))
+    lon = np.radians(np.atleast_1d(np.asarray(lon_deg, dtype=np.float64)))
+    return np.column_stack([np.cos(lat) * np.cos(lon), np.cos(lat) * np.sin(lon), np.sin(lat)])
+
+
+def geomagnetic_latitude_deg(
+    lat_deg: npt.ArrayLike, lon_deg: npt.ArrayLike
+) -> npt.NDArray[np.float64]:
+    """Centred-dipole geomagnetic latitude, degrees (IGRF-13 2020 pole).
+
+    Args:
+        lat_deg: Geographic latitude(s), degrees.
+        lon_deg: Geographic longitude(s), degrees.
+
+    Returns:
+        90 degrees minus the angular distance to :data:`GEOMAGNETIC_POLE_DEG`.
+    """
+    pole = unit_vectors(*GEOMAGNETIC_POLE_DEG)[0]
+    cos_angle = np.clip(unit_vectors(lat_deg, lon_deg) @ pole, -1.0, 1.0)
+    return 90.0 - np.degrees(np.arccos(cos_angle))
+
 
 @dataclass(frozen=True)
 class GeoBox:
@@ -234,6 +261,16 @@ class GeoRegion:
     def area_km2(self) -> float:
         """Total area, km^2 (pieces are assumed not to overlap)."""
         return sum(box.area_km2 for box in self.boxes)
+
+    @property
+    def centroid(self) -> GeoPoint:
+        """Area-weighted centre of the pieces' centres (on the sphere, so 180° safe)."""
+        lat = [(b.lat_min_deg + b.lat_max_deg) / 2 for b in self.boxes]
+        lon = [b.lon_min_deg + b.lon_span_deg / 2 for b in self.boxes]
+        weights = np.array([b.area_km2 for b in self.boxes])
+        x, y, z = (unit_vectors(lat, lon) * weights[:, None]).sum(axis=0)
+        lat_c = float(np.degrees(np.arctan2(z, np.hypot(x, y))))
+        return GeoPoint(lat_c, float(np.degrees(np.arctan2(y, x))))
 
     def sample(self, n: int, rng: np.random.Generator) -> tuple[npt.NDArray[np.float64], ...]:
         """``n`` points uniform over the region's area: ``(lat, lon)``."""

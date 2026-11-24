@@ -1,5 +1,24 @@
 # Experiment (pre-registered): does space weather modulate the ETAS background?
 
+**Run 2026-11-24 on validation 2020-2025: null for all three mechanisms.**
+Results: `docs/results/2026-11-24_space-weather-etas/` (code at 287f448).
+
+| Mechanism | Gain, nats/event (95% CI) | Shift p (Holm) | Sustained rate change per 1 sd (95% CI) |
+|-----------|---------------------------|----------------|------------------------------------------|
+| Energy (Newell) | 6.9e-5 (-1.3e-5 to 1.6e-4) | 0.05 (0.15) | +1.0% (-1.4 to +2.9) |
+| Variability (σBz) | 6.7e-5 (-1.6e-5 to 1.7e-4) | 0.15 (0.30) | +0.9% (-1.7 to +3.3) |
+| Compression (Pdyn) | 1.5e-5 (-1.3e-5 to 5.3e-5) | 0.22 (0.30) | +0.3% (-2.8 to +3.0) |
+
+31,841 validation events in 17 regions. For scale, ETAS itself gained 1.76
+nats/event over smoothed Poisson on the same span: the best space-weather
+term adds about 1/25,000 of that. Sustained elevated driving at any of the
+1-16 day scales changes the M>=4.5 background rate by less than about 3% per
+standard deviation. The geomagnetic-latitude test is not interpreted (no
+detection); for the record, its correlations were negative (opposite to the
+prediction). Exploratory: the joint model's interval just excludes 0
+(1.2e-4, 95% CI 6e-6 to 2.5e-4; uncorrected, not a claim); the 64-day
+variants were null, and compression+64d scored slightly worse than ETAS.
+
 Written 2026-11-24 UTC, before any space-weather feature or model code existed
 and before any space-weather series was compared with seismicity. Config:
 `configs/space_weather_etas.yaml` (its `prereg` block is the binding text;
