@@ -1,0 +1,29 @@
+name: debug-hapi
+on:
+  push:
+    branches: [debug/hapi-400]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: curl
+        run: |
+          U='https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=cmo/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2000-01-01T00:00:00Z&stop=2000-01-01T00:05:00Z&format=csv'
+          curl -sS -A spacegeo/0.1 -o /tmp/a -w "curl small %{http_code}\n" "$U"; head -c 600 /tmp/a; echo
+          U2='https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=cmo/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2000-01-01T00:00:00Z&stop=2001-01-01T00:00:00Z&format=csv'
+          curl -sS -A spacegeo/0.1 -o /tmp/b -w "curl year %{http_code} %{size_download}\n" "$U2"; head -c 600 /tmp/b; echo
+          curl -sS -o /tmp/c -w "curl year default-UA %{http_code} %{size_download}\n" "$U2"; head -c 300 /tmp/c; echo
+      - name: urllib
+        run: |
+          python3 - <<'PY'
+          import urllib.request, urllib.error
+          for stop in ["2000-01-01T00:05:00Z", "2000-02-01T00:00:00Z", "2001-01-01T00:00:00Z"]:
+              u = f"https://imag-data.bgs.ac.uk/GIN_V1/hapi/data?dataset=cmo/best-avail/PT1M/xyzf&parameters=Field_Vector&start=2000-01-01T00:00:00Z&stop={stop}&format=csv"
+              req = urllib.request.Request(u, headers={"User-Agent": "spacegeo/0.1"})
+              try:
+                  with urllib.request.urlopen(req, timeout=300) as r:
+                      body = r.read()
+                      print(stop, r.status, len(body), body[:120])
+              except urllib.error.HTTPError as e:
+                  print(stop, "HTTPError", e.code, e.headers.items(), e.read()[:1000])
+          PY
