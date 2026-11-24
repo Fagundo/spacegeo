@@ -1,0 +1,36 @@
+# INTERMAGNET observatories near the Ring of Fire regions, reduced to hourly
+# horizontal dB/dt (data/space_weather/intermagnet/<CODE>/) by
+# scripts/update_magnetometers.py in the `magnetometers` workflow.
+#
+# This is the candidate list, chosen by geography only (an observatory in or
+# near each region where INTERMAGNET has one). Which station serves which
+# region is decided in the experiment's pre-registration, from distance and
+# data coverage, before any comparison with seismicity.
+first_year: 2000
+refresh_years: 1
+min_pairs: 30
+stations:
+  - CMO   # College, Alaska
+  - SIT   # Sitka, Alaska
+  - SHU   # Shumagin, Alaska Peninsula
+  - VIC   # Victoria, British Columbia
+  - NEW   # Newport, Washington
+  - FRN   # Fresno, California
+  - TUC   # Tucson, Arizona
+  - TEO   # Teoloyucan, Mexico
+  - HUA   # Huancayo, Peru
+  - IPM   # Easter Island
+  - PIL   # Pilar, Argentina
+  - PET   # Paratunka, Kamchatka
+  - MMB   # Memambetsu, Hokkaido
+  - KAK   # Kakioka, Japan
+  - KNY   # Kanoya, Japan
+  - CBI   # Chichijima, Bonin Islands
+  - GUA   # Guam
+  - LNP   # Lunping, Taiwan
+  - MUT   # Muntinlupa, Philippines
+  - TND   # Tondano, Sulawesi
+  - KDU   # Kakadu, Australia
+  - API   # Apia, Samoa
+  - PPT   # Pamatai, Tahiti
+  - EYR   # Eyrewell, New Zealand
