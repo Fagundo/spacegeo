@@ -1,0 +1,89 @@
+name: Magnetometers
+
+# Downloads INTERMAGNET 1-minute data for the observatories in
+# configs/magnetometers.yaml, reduces it to hourly horizontal dB/dt and commits
+# data/space_weather/intermagnet/. One parallel job per station (the first
+# backfill is ~20 MB of minute data per station-year); a final job commits.
+# Monthly, because reported data become definitive slowly and the archive is
+# for research, not the weekly scan.
+
+on:
+  schedule:
+    - cron: "41 11 3 * *" # 3rd of each month, 11:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: magnetometers
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      stations: ${{ steps.list.outputs.stations }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - id: list
+        run: echo "stations=$(uv run python scripts/update_magnetometers.py --list-json)" >> "$GITHUB_OUTPUT"
+
+  station:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      max-parallel: 4 # be gentle with the BGS service
+      matrix:
+        station: ${{ fromJson(needs.plan.outputs.stations) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - name: Update ${{ matrix.station }}
+        run: uv run python scripts/update_magnetometers.py --station ${{ matrix.station }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mag-${{ matrix.station }}
+          path: data/space_weather/intermagnet/${{ matrix.station }}
+          if-no-files-found: error
+          retention-days: 7
+
+  commit:
+    needs: station
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mag-*
+          path: artifacts
+      - name: Commit archives
+        run: |
+          for dir in artifacts/mag-*; do
+            code="${dir#artifacts/mag-}"
+            mkdir -p "data/space_weather/intermagnet/$code"
+            cp -r "$dir"/. "data/space_weather/intermagnet/$code/"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/space_weather/intermagnet
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "Update INTERMAGNET dB/dt archives $(date -u +%Y-%m-%d)"
+          for attempt in 1 2 3; do
+            git pull --rebase && git push && exit 0
+            sleep 10
+          done
+          exit 1

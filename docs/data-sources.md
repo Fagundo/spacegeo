@@ -78,3 +78,33 @@ _Planned: CDAW LASCO CME catalog._
 - **Fill values:** -1 (Kp, ap, SN, F10.7) become NaN.
 - **Revisions:** recent days are nowcast values (`D = 0`) and become definitive
   after about a month, so recent years are always re-downloaded.
+
+## INTERMAGNET observatories, hourly dB/dt (`intermagnet`)
+
+- **Publisher:** INTERMAGNET (International Real-time Magnetic Observatory
+  Network), served by the BGS Edinburgh Geomagnetic Information Node.
+- **URL:** HAPI 3.1 service `https://imag-data.bgs.ac.uk/GIN_V1/hapi`;
+  dataset `<code>/best-avail/PT1M/xyzf` (definitive where available, else
+  quasi-definitive/reported), parameter `Field_Vector` (X, Y, Z in nT).
+  `info?dataset=...` gives coordinates (`x_latitude`, `x_longitude` 0-360),
+  `startDate`, `stopDate`, fill value and `maxRequestDuration` (P366D).
+- **License/terms:** INTERMAGNET conditions of use: cite INTERMAGNET and the
+  individual observatory institutes, e.g. "The results presented in this
+  paper rely on data collected at magnetic observatories. We thank the
+  national institutes that support them and INTERMAGNET for promoting high
+  standards of magnetic observatory practice (www.intermagnet.org)."
+- **Stations:** candidates in `configs/magnetometers.yaml`; metadata in
+  `data/space_weather/intermagnet/<CODE>/station.json`.
+- **Cadence:** 1-minute samples stamped at minute start. Refreshed monthly
+  (`magnetometers` workflow); the most recent year is always re-downloaded.
+- **Stored product (not the minute data):** per station and hour (stamped at
+  the hour start), from minute pairs whose two samples both start in that
+  hour: `dbh_dt_max_nT_min` and `dbh_dt_mean_nT_min`, the max and mean of
+  sqrt(dX^2 + dY^2) per minute (nT/min), and `n_pairs` (0-59). Hours with
+  fewer than 30 valid pairs have NaN statistics. Raw minute files are
+  deleted on the runner after reduction (about 20 MB per station-year).
+- **Fill values:** 99999.0 in X/Y/Z becomes NaN in the reader. An empty HAPI
+  response (no data for the request) is an empty frame.
+- **Known issues:** reported (non-definitive) data can contain spikes, which
+  inflate hourly maxima; the mean is less sensitive. Observatory coverage
+  starts and stops (some stations close or join after 2000).

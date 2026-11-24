@@ -132,3 +132,20 @@ class SpaceWeatherConfig(BaseConfig):
     first_year: int = 2000
     refresh_years: int = Field(default=2, ge=1)
     sources: tuple[SpaceWeatherSpec, ...] = Field(min_length=1)
+
+
+class MagnetometerConfig(BaseConfig):
+    """INTERMAGNET observatories whose hourly dB/dt archives CI maintains.
+
+    Attributes:
+        first_year: Earliest year kept (or the station's first year if later).
+        refresh_years: Most recent years always re-downloaded (reported data
+            become definitive within about a year).
+        min_pairs: Minimum valid minute pairs for an hourly value.
+        stations: IAGA codes (upper case).
+    """
+
+    first_year: int = 2000
+    refresh_years: int = Field(default=1, ge=1)
+    min_pairs: int = Field(default=30, ge=1, le=59)
+    stations: tuple[str, ...] = Field(min_length=1)

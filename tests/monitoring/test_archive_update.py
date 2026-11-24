@@ -5,9 +5,11 @@ from spacegeo.common.time import TimeWindow, to_utc
 from spacegeo.data.io.catalog_archive import CatalogArchive
 from spacegeo.data.io.comcat import ComCatReader
 from spacegeo.data.io.gfz_kp import GfzKpReader
+from spacegeo.data.io.intermagnet import IntermagnetReader
 from spacegeo.data.io.yearly_archive import YearlyArchive
+from spacegeo.data.preprocessing.hourly_dbdt import HourlyHorizontalDbDt
 from spacegeo.data.scraping.base import DownloadRequest, Scraper
-from spacegeo.monitoring.archive_update import ArchiveUpdater
+from spacegeo.monitoring.archive_update import ArchiveUpdater, UpdatePolicy
 
 HEADER = "time,latitude,longitude,depth,mag,magType,id\n"
 
@@ -37,7 +39,7 @@ class _FakeScraper(Scraper):
 def test_fetches_missing_then_refreshes_only_recent_years(tmp_path: Path) -> None:
     archive = CatalogArchive(tmp_path / "archive")
     scraper = _FakeScraper(tmp_path / "raw")
-    updater = ArchiveUpdater(scraper, ComCatReader(), archive, refresh_years=2)
+    updater = ArchiveUpdater(scraper, ComCatReader(), archive, UpdatePolicy(refresh_years=2))
     as_of = to_utc("2026-04-01T00:00Z")
 
     changed = updater.update(2023, as_of)
@@ -82,10 +84,46 @@ def test_shared_file_downloaded_once_and_time_deduplicated(tmp_path: Path) -> No
     reader = GfzKpReader()
     archive = YearlyArchive(tmp_path / "archive", reader.schema)
     scraper = _SharedFileScraper(tmp_path / "raw")
-    updater = ArchiveUpdater(scraper, reader, archive, unique_column=None)
+    updater = ArchiveUpdater(scraper, reader, archive, UpdatePolicy(unique_column=None))
     changed = updater.update(2014, to_utc("2026-11-22T12:00Z"))
     assert scraper.downloads == 1
     assert changed == list(range(2014, 2027))  # empty years are stored too
     assert len(archive.read()) == 8 + 8 + 4  # 2026 clipped at 12:00
     updater.update(2014, to_utc("2026-11-22T12:00Z"))
     assert scraper.downloads == 2  # recent years refreshed, still one download
+
+
+MINUTE_FIXTURE = Path(__file__).parents[1] / "fixtures" / "intermagnet" / "CMO_sample.csv"
+
+
+class _MinuteScraper(Scraper):
+    source_name = "minutes"
+
+    def __init__(self, raw_dir: Path) -> None:
+        super().__init__(raw_dir, client=self)
+
+    def plan(self, window: TimeWindow) -> Sequence[DownloadRequest]:
+        return [
+            DownloadRequest(
+                f"https://example.org/{window.start.year}.csv", f"{window.start.year}.csv"
+            )
+        ]
+
+    def download(self, url: str, dest: Path) -> None:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(MINUTE_FIXTURE.read_text() if "2024" in url else "")
+
+
+def test_transform_applied_and_raw_discarded(tmp_path: Path) -> None:
+    archive = YearlyArchive(tmp_path / "archive", HourlyHorizontalDbDt.OUTPUT_SCHEMA)
+    scraper = _MinuteScraper(tmp_path / "raw")
+    policy = UpdatePolicy(
+        refresh_years=1, unique_column=None, transform=HourlyHorizontalDbDt(), discard_raw=True
+    )
+    ArchiveUpdater(scraper, IntermagnetReader(), archive, policy).update(
+        2023, to_utc("2025-01-01T00:00Z")
+    )
+    stored = archive.read()
+    assert len(stored) == 3  # three hours in 2024, nothing in 2023
+    assert stored["n_pairs"].tolist() == [59.0, 57.0, 29.0]
+    assert not list((tmp_path / "raw").glob("*.csv"))

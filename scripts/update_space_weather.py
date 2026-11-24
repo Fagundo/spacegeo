@@ -24,7 +24,7 @@ from spacegeo.data.io.yearly_archive import YearlyArchive
 from spacegeo.data.scraping.base import SCRAPERS
 from spacegeo.data.scraping.gfz_kp import GfzKpScraper
 from spacegeo.data.scraping.omni import OmniScraper
-from spacegeo.monitoring.archive_update import ArchiveUpdater
+from spacegeo.monitoring.archive_update import ArchiveUpdater, UpdatePolicy
 from spacegeo.monitoring.config import SpaceWeatherConfig, SpaceWeatherSpec
 
 _log = get_logger("update_space_weather")
@@ -52,8 +52,7 @@ class SpaceWeatherRefresh:
             scraper=SCRAPERS.get(spec.source)(self._project.raw_source(spec.source)),
             reader=reader,
             archive=YearlyArchive(self._project.data_space_weather / spec.name, reader.schema),
-            refresh_years=self._config.refresh_years,
-            unique_column=None,
+            policy=UpdatePolicy(refresh_years=self._config.refresh_years, unique_column=None),
         )
 
 
