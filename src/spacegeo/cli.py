@@ -28,8 +28,6 @@ from spacegeo.training.etas_baseline import (
     ValidationExperimentConfig,
 )
 from spacegeo.training.etas_report import EtasBaselineReport
-from spacegeo.training.event_forecast import EventForecastConfig, EventForecastExperiment
-from spacegeo.training.event_forecast_report import EventForecastReport
 from spacegeo.training.small_trigger import (
     SmallTriggerConfig,
     SmallTriggerExperiment,
@@ -50,7 +48,6 @@ class _Runner:
 
 _RUNNERS: dict[str, _Runner] = {
     "etas_baseline": _Runner(EtasExperimentConfig, EtasBaselineExperiment, EtasBaselineReport),
-    "event_forecast": _Runner(EventForecastConfig, EventForecastExperiment, EventForecastReport),
     "small_trigger_etas": _Runner(SmallTriggerConfig, SmallTriggerExperiment, SmallTriggerReport),
     "anomaly_followup": _Runner(
         AnomalyFollowupConfig, AnomalyFollowupExperiment, AnomalyFollowupReport
