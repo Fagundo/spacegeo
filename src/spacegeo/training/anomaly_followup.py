@@ -169,11 +169,14 @@ class AnomalyFollowupExperiment:
     def _units(self, flags: pd.DataFrame, cmp: FlagComparison) -> pd.DataFrame:
         relevant = flags.loc[flags["test"].isin(cmp.tests)]
         flagged = relevant.assign(hit=relevant["flag"] == cmp.flag)
-        units = flagged.groupby(["window_start", "region"], as_index=False)["hit"].any()
+        units = pd.DataFrame(
+            flagged.groupby(["window_start", "region"], as_index=False)["hit"].any()
+        )
         last_end = to_utc(self._config.val_end) - duration(
             days=self._config.week_days + cmp.horizon_days
         )
-        return units.loc[units["window_start"] <= last_end].reset_index(drop=True)
+        starts = pd.DatetimeIndex(pd.to_datetime(units["window_start"], utc=True))
+        return units.loc[np.asarray(starts <= last_end)].reset_index(drop=True)
 
     def _compare(
         self, cmp: FlagComparison, flags: pd.DataFrame, targets: pd.DataFrame
