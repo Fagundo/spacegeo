@@ -55,6 +55,11 @@ class ProjectPaths:
         """Committed, CI-maintained parsed catalogs."""
         return self.root / "data" / "catalog"
 
+    @property
+    def data_space_weather(self) -> Path:
+        """Committed, CI-maintained parsed space-weather series."""
+        return self.root / "data" / "space_weather"
+
     def catalog_archive(self, source_name: str, min_magnitude: float) -> Path:
         """Archive directory for one catalog source at one magnitude cut."""
         return self.data_catalog / f"{source_name}_M{min_magnitude:g}"

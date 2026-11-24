@@ -1,0 +1,13 @@
+# Space-weather archives kept in data/space_weather/ and refreshed by the
+# weekly workflow (scripts/update_space_weather.py). Missing years are
+# downloaded; the last two years are always re-downloaded because OMNI and
+# Kp values are revised from provisional to definitive.
+first_year: 2000
+refresh_years: 2
+sources:
+  # NASA OMNI2 hourly: IMF, plasma, Dst, AE/AL/AU, Kp, SN, F10.7.
+  - name: omni2
+    source: omni2
+  # GFZ Potsdam 3-hourly Kp/ap with the definitive flag (the Kp of record).
+  - name: gfz_kp
+    source: gfz_kp
