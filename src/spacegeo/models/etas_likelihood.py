@@ -155,6 +155,11 @@ class EtasLikelihood:
         self._settings = settings
         self._parents = catalog.in_span(span[0] - settings.t_max_days, span[1])
 
+    @property
+    def targets(self) -> npt.NDArray[np.int64]:
+        """Catalog indices of the scored events."""
+        return self._pairs.targets
+
     def intensities(self, params: EtasParameters) -> tuple[Array, Array]:
         """Total intensity and its background part at each target, per day per km^2."""
         trig = self._pair_terms(params)[0]

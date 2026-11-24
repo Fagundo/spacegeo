@@ -1,20 +1,43 @@
-"""Write an ETAS baseline run: tables, metrics, plots and NOTES.md."""
+"""Write a two-model ETAS comparison run: tables, metrics, plots and NOTES.md."""
 
 from __future__ import annotations
+
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 
 from spacegeo.common.run import RunDirectory, markdown_table
-from spacegeo.training.etas_baseline import EtasBaselineResult, EtasExperimentConfig
+from spacegeo.training.etas_baseline import EtasBaselineResult, ValidationExperimentConfig
 
 
 class EtasBaselineReport:
-    """Turns an :class:`EtasBaselineResult` into run-directory files."""
+    """Turns an :class:`EtasBaselineResult` into run-directory files.
+
+    Subclasses change the labels, the per-region columns and the pooled
+    bullet points for other model pairs.
+    """
+
+    TITLE = "ETAS baseline, Ring of Fire"
+    MODEL = "ETAS"
+    REFERENCE = "smoothed Poisson"
+    UNIT = "event"
+    COLUMNS: ClassVar[tuple[str, ...]] = (
+        "n_train",
+        "n_val",
+        "info_gain_per_event",
+        "info_gain_lo",
+        "info_gain_hi",
+        "branching_ratio",
+        "b_value",
+        "etas_p",
+        "etas_alpha",
+        "ks_p_holm",
+    )
 
     def write(
-        self, run: RunDirectory, config: EtasExperimentConfig, result: EtasBaselineResult
+        self, run: RunDirectory, config: ValidationExperimentConfig, result: EtasBaselineResult
     ) -> None:
         """Write every output into ``run``."""
         config.to_yaml(run.path / "config.resolved.yaml")
@@ -31,10 +54,11 @@ class EtasBaselineReport:
     def _met(result: EtasBaselineResult) -> bool:
         return bool(result.pooled["info_gain_lo"] > 0)
 
-    @staticmethod
-    def _gain_plot(per_region: pd.DataFrame, pooled: dict[str, float], run: RunDirectory) -> None:
+    def _gain_plot(
+        self, per_region: pd.DataFrame, pooled: dict[str, float], run: RunDirectory
+    ) -> None:
         table = per_region.sort_values("info_gain_per_event")
-        fig = Figure(figsize=(7, 6))
+        fig = Figure(figsize=(7, max(3.2, 0.35 * len(table) + 1.5)))
         ax = fig.subplots()
         y = np.arange(len(table))
         lo = table["info_gain_per_event"] - table["info_gain_lo"]
@@ -43,55 +67,48 @@ class EtasBaselineReport:
         ax.axvline(0, color="#555555", linewidth=1)
         ax.axvline(pooled["info_gain_per_event"], color="#999999", linestyle="--", linewidth=1)
         ax.set_yticks(y, table.index)
-        ax.set_xlabel("information gain of ETAS over smoothed Poisson, nats per event")
-        ax.set_title("ETAS gain over smoothed Poisson, validation 2020-2025")
+        ax.set_xlabel(f"information gain, nats per {self.UNIT} (95% block bootstrap)")
+        ax.set_title(f"{self.MODEL} vs. {self.REFERENCE}\nvalidation 2020-2025")
         fig.tight_layout()
         fig.savefig(run.path / "info_gain_by_region.png", dpi=110, metadata={"Software": None})
 
-    @staticmethod
-    def _cumulative_plot(weekly: pd.DataFrame, run: RunDirectory) -> None:
-        diff = weekly.assign(d=weekly["ll_etas"] - weekly["ll_poisson"])
+    def _cumulative_plot(self, weekly: pd.DataFrame, run: RunDirectory) -> None:
+        diff = weekly.assign(d=weekly["ll_model"] - weekly["ll_reference"])
         totals = pd.DataFrame(diff.groupby("week")[["d", "n"]].sum())
         weeks = pd.to_datetime(totals.index.to_numpy())
         fig = Figure(figsize=(7, 3.2))
         ax = fig.subplots()
         ax.plot(weeks, totals["d"].cumsum().to_numpy(), color="#2b6cb0")
         ax.set_ylabel("cumulative log-likelihood gain, nats")
-        ax.set_title("ETAS minus smoothed Poisson, all regions, by week")
+        ax.set_title(f"{self.MODEL} minus {self.REFERENCE}, all regions, by week")
         fig.tight_layout()
         fig.savefig(run.path / "info_gain_over_time.png", dpi=110, metadata={"Software": None})
 
-    def _notes(self, config: EtasExperimentConfig, result: EtasBaselineResult) -> str:
+    def _bullets(self, pooled: dict[str, float]) -> list[str]:
+        return [
+            f"- Regions whose time-rescaling KS test rejects (Holm, 0.05): "
+            f"{int(pooled['regions_ks_reject_holm_0.05'])}",
+            f"- Largest branching ratio: {pooled['max_branching_ratio']:.2f}",
+        ]
+
+    def _notes(self, config: ValidationExperimentConfig, result: EtasBaselineResult) -> str:
         pooled, table = result.pooled, result.per_region
         verdict = "MET" if self._met(result) else "NOT MET"
-        cols = [
-            "n_train",
-            "n_val",
-            "info_gain_per_event",
-            "info_gain_lo",
-            "info_gain_hi",
-            "branching_ratio",
-            "b_value",
-            "etas_p",
-            "etas_alpha",
-            "ks_p_holm",
-        ]
+        cols = [c for c in self.COLUMNS if c in table.columns]
         return "\n".join(
             [
-                "# ETAS baseline, Ring of Fire",
+                f"# {self.TITLE}",
                 "",
                 *config.prereg.header(),
                 "",
                 f"**Primary criterion {verdict}.** Pooled information gain "
-                f"{pooled['info_gain_per_event']:.3f} nats/event "
+                f"{pooled['info_gain_per_event']:.3f} nats/{self.UNIT} "
                 f"(95% CI {pooled['info_gain_lo']:.3f} to {pooled['info_gain_hi']:.3f}), "
-                f"{int(pooled['n_events'])} validation events in {int(pooled['n_weeks'])} weeks.",
+                f"{int(pooled['n_events'])} scored events in {int(pooled['n_weeks'])} weeks.",
                 "",
                 f"- Regions with gain CI above 0: {int(pooled['regions_gain_ci_above_0'])} "
                 f"of {int(pooled['n_regions'])}",
-                f"- Regions whose time-rescaling KS test rejects (Holm, 0.05): "
-                f"{int(pooled['regions_ks_reject_holm_0.05'])}",
-                f"- Largest branching ratio: {pooled['max_branching_ratio']:.2f}",
+                *self._bullets(pooled),
                 f"- Variants in this family: {config.prereg.variants}",
                 "",
                 "## Per region",

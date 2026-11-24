@@ -1,0 +1,42 @@
+prereg:
+  hypothesis: In sub-regions where ComCat is complete to M3.0, a space-time ETAS model
+    fitted on M>=3.0 events (2000-2019) assigns higher likelihood to the 2020-2025
+    M>=4.5 events than an ETAS model fitted on M>=4.5 events only.
+  comparison: The same EtasModel with m0 = 4.5, fitted on the same span, region, truncation
+    and settings, from the same regional M2.5 archives cut at 4.5.
+  metric: Information gain per M>=4.5 validation event = (log L_M3 - log L_M4.5) /
+    N. The M3 model's rate of M>=4.5 events is its ETAS rate times the training share
+    of M>=3.0 events that reach M>=4.5 (empirical, per sub-region); every M>=3.0 event
+    triggers. Both use all history. 95% interval from a moving-block bootstrap over
+    weeks (13-week blocks), all sub-regions resampled together.
+  success: 'Primary: pooled information gain over the three sub-regions > 0 with the
+    95% interval excluding 0. Reported, not pass/fail: per-sub-region gains with intervals
+    (Holm-corrected one-sided p), branching ratios of both models.'
+  data: 'USGS ComCat archives data/catalog/comcat_M2.5_{alaska_aleutians, cascadia,
+    california_baja}, combined (duplicates by event id dropped). Sub-regions: alaska_mainland,
+    cascadia_onshore, california (configs/m3_subregions.yaml). low_m0 = 3.0, target
+    and reference m0 = 4.5. No declustering (ETAS models clustering). ETAS: first
+    365 days history only, triggering truncated at 365 days and 300 km. Validation:
+    Monday weeks 2020-01-06 to 2025-12-29. Test span (2026+) not loaded.'
+  variants: 1
+regions_file: configs/m3_subregions.yaml
+catalog: data/catalog/comcat_M2.5_alaska_aleutians
+mc: 4.5
+train_start: '2000-01-01T00:00:00Z'
+val_start: '2020-01-01T00:00:00Z'
+val_end: '2026-01-01T00:00:00Z'
+week_anchor: W-MON
+bootstrap_block_weeks: 13
+bootstrap_resamples: 2000
+seed: 0
+etas:
+  t_max_days: 365.0
+  r_max_km: 300.0
+  burn_in_days: 365.0
+  iterations: 5
+  tolerance: 0.02
+extra_catalogs:
+- data/catalog/comcat_M2.5_cascadia
+- data/catalog/comcat_M2.5_california_baja
+experiment: small_trigger_etas
+low_m0: 3.0
